@@ -36,12 +36,3 @@ body {
   margin-left: 1px;
   animation: blink 1s step-start infinite;
 }
-
-/* Highlight for cited text in the PDF text layer. The text layer paints
-   transparent glyphs over the rendered canvas, so keep the text transparent
-   and only paint a background so the real glyphs underneath stay visible. */
-.pdf-hl {
-  background-color: rgba(255, 221, 0, 0.45);
-  color: transparent;
-  border-radius: 2px;
-}

@@ -1,28 +1,32 @@
 import { z } from "zod";
 
-// Shared between the /api/ask route (streamObject) and the DocumentQA component
-// (useObject) so the streamed shape stays in sync on both ends.
-export const answerSchema = z.object({
-    answer: z
+// Shared between the /api/extract route (streamObject) and the UI (useObject)
+// so the streamed shape stays in sync on both ends. streamObject fills these
+// fields progressively, so every field must tolerate being briefly absent.
+export const jobPostingSchema = z.object({
+    title: z.string().describe("The job title, e.g. 'Senior Frontend Engineer'."),
+    company: z.string().optional().describe("Hiring company name, if stated."),
+    location: z
         .string()
-        .describe("A concise answer to the question, based only on the document."),
-    citations: z
-        .array(
-            z.object({
-                quote: z
-                    .string()
-                    .describe("An exact quote copied verbatim from the document."),
-                pageHint: z
-                    .string()
-                    .describe(
-                        'Where the quote appears, e.g. "p. 2", derived from the ' +
-                            '"-- N of M --" page markers in the document. Use "unknown" if unclear.',
-                    ),
-            }),
-        )
-        .describe(
-            "Supporting quotes from the document. Empty if the answer is not found in the document.",
-        ),
+        .optional()
+        .describe("Location or remote policy, e.g. 'Berlin' or 'Remote (EU)'."),
+    employmentType: z
+        .string()
+        .optional()
+        .describe("e.g. 'Full-time', 'Part-time', 'Contract', 'Internship'."),
+    seniority: z
+        .string()
+        .optional()
+        .describe("e.g. 'Junior', 'Mid', 'Senior', 'Lead'."),
+    requiredSkills: z
+        .array(z.string())
+        .describe("Must-have skills, tools, or qualifications."),
+    niceToHaveSkills: z
+        .array(z.string())
+        .describe("Preferred but non-essential skills. Empty if none stated."),
+    responsibilities: z
+        .array(z.string())
+        .describe("Key duties and responsibilities of the role."),
 });
 
-export type AnswerObject = z.infer<typeof answerSchema>;
+export type JobPosting = z.infer<typeof jobPostingSchema>;

@@ -1,15 +1,28 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
+import type { JobPosting } from "@/lib/schema";
 
+// The client sends `jobData` with every request (via the chat transport body),
+// so the extracted posting stays in the system context for the whole
+// conversation — not just the first turn.
 export async function POST(req: Request) {
-    const { messages, document }: { messages: UIMessage[]; document?: string } =
+    const { messages, jobData }: { messages: UIMessage[]; jobData?: JobPosting } =
         await req.json();
 
-    const system = document
-        ? `You are an assistant that answers questions about an uploaded document. ` +
-          `Answer only from the content of the document below. If the answer is not ` +
-          `found in the document, say so clearly.\n\n--- DOCUMENT ---\n${document}\n--- END ---`
-        : "You are a helpful assistant.";
+    const system = jobData
+        ? `You are a job application assistant. You help the user write and refine ` +
+          `a cover letter and application for the specific job below.\n\n` +
+          `Guidelines:\n` +
+          `- Base your writing on the job details and anything the user tells you ` +
+          `about themselves. Do not invent specific experience the user hasn't ` +
+          `mentioned — where you need a detail you don't have, use a clear ` +
+          `placeholder like [your relevant project].\n` +
+          `- When asked to draft, produce a complete, well-structured cover letter ` +
+          `tailored to the role's required skills and responsibilities.\n` +
+          `- When asked to adjust (e.g. more formal, shorter, highlight a skill), ` +
+          `revise the most recent draft and return the full updated letter.\n\n` +
+          `--- JOB DETAILS (JSON) ---\n${JSON.stringify(jobData, null, 2)}\n--- END ---`
+        : "You are a helpful job application assistant.";
 
     const result = streamText({
         // Reads ANTHROPIC_API_KEY from .env. Swap to anthropic("claude-opus-5")
