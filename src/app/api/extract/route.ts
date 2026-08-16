@@ -3,8 +3,8 @@ import { streamObject } from "ai";
 import { jobPostingSchema } from "@/lib/schema";
 import { fetchReadableText, ScrapeError } from "@/lib/scrape";
 
-// jsdom needs the Node.js runtime (it isn't Edge-compatible), which is the
-// App Router default — declaring it here makes that requirement explicit.
+// Node.js runtime (the App Router default) — declaring it here makes that
+// requirement explicit rather than implicit.
 export const runtime = "nodejs";
 // Vercel's default function timeout (10s on Hobby) can be shorter than a
 // slow page fetch + full streamObject generation combined.
