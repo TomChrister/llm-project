@@ -34,7 +34,7 @@ export function SegmentedControl<T extends string>({
                         key={opt.value}
                         type="button"
                         onClick={() => onChange(opt.value)}
-                        className={`rounded-md px-4 py-1.5 text-[13px] font-medium ${
+                        className={`cursor-pointer rounded-md px-4 py-1.5 text-[13px] font-medium ${
                             active
                                 ? "bg-[var(--bg-accent)] text-[var(--text-on-accent)]"
                                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"

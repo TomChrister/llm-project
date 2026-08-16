@@ -60,7 +60,7 @@ export function Sidebar({
                                     e.stopPropagation();
                                     onDelete(job.id);
                                 }}
-                                className="shrink-0 px-1 py-0.5 text-sm text-[var(--text-tertiary)] hover:text-[var(--text-danger)]"
+                                className="shrink-0 cursor-pointer px-1 py-0.5 text-sm text-[var(--text-tertiary)] hover:text-[var(--text-danger)]"
                             >
                                 ×
                             </button>
