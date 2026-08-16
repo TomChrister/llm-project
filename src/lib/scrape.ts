@@ -2,8 +2,14 @@
 // then use Readability (the algorithm behind Firefox Reader View) to strip
 // nav/footer/ads/scripts and keep just the main article text, so the LLM gets
 // clean signal instead of page chrome.
+//
+// Uses linkedom rather than jsdom for the DOM Readability needs: jsdom's
+// dependency tree (html-encoding-sniffer, whatwg-url) pulls in an ESM-only
+// package that breaks when Next.js externalizes jsdom for the serverless
+// bundle on Vercel (raw require() of an ESM file). linkedom has none of that
+// and is small enough to just bundle normally.
 import { Readability } from "@mozilla/readability";
-import { JSDOM } from "jsdom";
+import { parseHTML } from "linkedom";
 
 // Thrown for every expected failure so the route can map it to a friendly
 // message + HTTP status instead of a generic 500.
@@ -104,8 +110,10 @@ export async function fetchReadableText(rawUrl: string): Promise<string> {
     }
 
     // Readability needs a DOM. Pass the final URL so relative links resolve.
-    const dom = new JSDOM(html, { url: res.url || url.href });
-    const article = new Readability(dom.window.document).parse();
+    const { document } = parseHTML(html, {
+        location: { href: res.url || url.href },
+    });
+    const article = new Readability(document).parse();
     const text = article?.textContent?.trim();
 
     if (!text || text.length < 50) {
