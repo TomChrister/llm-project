@@ -17,16 +17,18 @@ export async function POST(req: Request) {
         ? `You are a job application assistant. You help the user write and refine ` +
           `a cover letter and application for the specific job below.\n\n` +
           `Guidelines:\n` +
+          `- Always write in Norwegian (bokmål), regardless of what language the ` +
+          `job details or the user's messages are in.\n` +
           `- Base your writing on the job details and anything the user tells you ` +
           `about themselves. Do not invent specific experience the user hasn't ` +
           `mentioned — where you need a detail you don't have, use a clear ` +
-          `placeholder like [your relevant project].\n` +
+          `placeholder like [ditt relevante prosjekt].\n` +
           `- When asked to draft, produce a complete, well-structured cover letter ` +
           `tailored to the role's required skills and responsibilities.\n` +
           `- When asked to adjust (e.g. more formal, shorter, highlight a skill), ` +
           `revise the most recent draft and return the full updated letter.\n\n` +
           `--- JOB DETAILS (JSON) ---\n${JSON.stringify(jobData, null, 2)}\n--- END ---`
-        : "You are a helpful job application assistant.";
+        : "Du er en hjelpsom jobbsøknadsassistent. Svar alltid på norsk (bokmål).";
 
     const result = streamText({
         // Reads ANTHROPIC_API_KEY from .env. Swap to anthropic("claude-opus-5")

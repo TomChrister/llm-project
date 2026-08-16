@@ -58,19 +58,19 @@ export function JobDetails({ job }: { job: PartialJob }) {
 
             {(job.location || job.employmentType || job.seniority) && (
                 <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                    <MetaField label="Location" value={job.location} />
+                    <MetaField label="Sted" value={job.location} />
                     <MetaField label="Type" value={job.employmentType} />
-                    <MetaField label="Seniority" value={job.seniority} />
+                    <MetaField label="Erfaringsnivå" value={job.seniority} />
                 </dl>
             )}
 
             <TagList
-                label="Required skills"
+                label="Nødvendige ferdigheter"
                 items={job.requiredSkills}
                 tone="required"
             />
             <TagList
-                label="Nice to have"
+                label="Fint å ha"
                 items={job.niceToHaveSkills}
                 tone="nice"
             />
@@ -78,7 +78,7 @@ export function JobDetails({ job }: { job: PartialJob }) {
             {responsibilities.length > 0 && (
                 <div>
                     <h3 className="mb-2 text-sm font-medium text-[var(--text-secondary)]">
-                        Responsibilities
+                        Ansvarsområder
                     </h3>
                     <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
                         {responsibilities.map((r, i) => (

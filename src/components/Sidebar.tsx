@@ -19,15 +19,15 @@ export function Sidebar({
     return (
         <div className="flex w-60 shrink-0 flex-col gap-4 border-r border-[var(--border-subtle)] py-6 pr-4">
             <Button variant="secondary" size="sm" onClick={onNew}>
-                New extraction
+                Ny uthenting
             </Button>
             <div className="flex flex-col gap-0.5">
                 <div className="mb-2 px-2 text-xs tracking-[var(--tracking-wide)] text-[var(--text-tertiary)] uppercase">
-                    History
+                    Historikk
                 </div>
                 {jobs.length === 0 && (
                     <div className="px-2 text-sm text-[var(--text-tertiary)]">
-                        No saved jobs yet.
+                        Ingen lagrede stillinger ennå.
                     </div>
                 )}
                 {jobs
@@ -55,7 +55,7 @@ export function Sidebar({
                             </div>
                             <button
                                 type="button"
-                                title="Remove"
+                                title="Fjern"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onDelete(job.id);

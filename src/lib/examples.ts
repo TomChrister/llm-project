@@ -9,80 +9,80 @@ export type ExamplePosting = {
 export const examplePostings: ExamplePosting[] = [
     {
         id: "frontend",
-        label: "Frontend Engineer",
-        text: `Frontend Engineer — Northwind Labs (Remote, EU)
+        label: "Frontend-utvikler",
+        text: `Frontend-utvikler — Northwind Labs (Fjernjobb, EU)
 
-About the role
-Northwind Labs is building a collaborative data-analysis platform used by
-research teams. We're looking for a Senior Frontend Engineer to lead the UI of
-our next-generation editor. This is a full-time, fully remote position open to
-candidates based in the EU.
+Om rollen
+Northwind Labs bygger en samarbeidsplattform for dataanalyse som brukes av
+forskningsteam. Vi ser etter en erfaren frontend-utvikler til å lede
+brukergrensesnittet for vår neste generasjons editor. Dette er en fast,
+heltids fjernjobb åpen for kandidater bosatt i EU.
 
-What you'll do
-- Own and evolve our React + TypeScript component library
-- Build real-time, collaborative editing features
-- Partner with design to ship accessible, polished interfaces
-- Mentor two mid-level engineers and review their work
+Hva du vil gjøre
+- Eie og videreutvikle vårt React + TypeScript-komponentbibliotek
+- Bygge sanntids, samarbeidende redigeringsfunksjoner
+- Samarbeide tett med design for å levere tilgjengelige, polerte grensesnitt
+- Veilede to utviklere på mellomnivå og gjennomgå arbeidet deres
 
-What we're looking for
-- 5+ years building production web apps with React and TypeScript
-- Strong CSS and accessibility fundamentals
-- Experience with real-time data (WebSockets, CRDTs) is a big plus
-- Comfortable working async across time zones
+Hva vi ser etter
+- 5+ års erfaring med å bygge produksjonsapper med React og TypeScript
+- Solid grunnlag i CSS og tilgjengelighet
+- Erfaring med sanntidsdata (WebSockets, CRDT-er) er et stort pluss
+- Komfortabel med å jobbe asynkront på tvers av tidssoner
 
-Nice to have
-- Experience with Next.js
-- Familiarity with data visualisation (D3, Recharts)
-- Open-source contributions`,
+Fint å ha
+- Erfaring med Next.js
+- Kjennskap til datavisualisering (D3, Recharts)
+- Bidrag til åpen kildekode-prosjekter`,
     },
     {
         id: "pm",
-        label: "Product Manager",
-        text: `Product Manager, Payments — Lumen Financial (Hybrid, London)
+        label: "Produktsjef",
+        text: `Produktsjef, Betaling — Lumen Financial (Hybrid, London)
 
-Lumen Financial helps small businesses get paid faster. We're hiring a Product
-Manager to own our payments experience end to end. This is a hybrid role: three
-days a week in our London office.
+Lumen Financial hjelper småbedrifter med å få betalt raskere. Vi søker en
+produktsjef til å eie hele vår betalingsopplevelse fra start til slutt.
+Dette er en hybridrolle: tre dager i uken på kontoret vårt i London.
 
-Responsibilities
-- Define the roadmap for our payment acceptance products
-- Translate customer problems into clear, prioritised requirements
-- Work closely with engineering, design, and compliance
-- Analyse funnel metrics and run experiments to improve conversion
+Ansvarsområder
+- Definere veikartet for våre produkter for betalingsmottak
+- Omsette kundeproblemer til klare, prioriterte krav
+- Samarbeide tett med utvikling, design og compliance
+- Analysere trakt-metrikker og kjøre eksperimenter for å bedre konvertering
 
-Requirements
-- 3+ years of product management experience, ideally in fintech
-- A track record of shipping B2B SaaS products
-- Strong analytical skills and comfort with SQL
-- Excellent written and verbal communication
+Krav
+- 3+ års erfaring med produktledelse, gjerne innen fintech
+- Dokumentert erfaring med å levere B2B SaaS-produkter
+- Sterke analytiske ferdigheter og god kjennskap til SQL
+- Utmerket skriftlig og muntlig kommunikasjon
 
-Bonus points
-- Experience with payments, cards, or regulatory environments
-- Startup experience`,
+Ekstra pluss
+- Erfaring med betaling, kort eller regulatoriske miljøer
+- Erfaring fra oppstartsselskaper`,
     },
     {
         id: "designer",
-        label: "UX Designer (Junior)",
-        text: `Junior UX Designer — Bright Harbor (On-site, Amsterdam)
+        label: "UX-designer (Junior)",
+        text: `Junior UX-designer — Bright Harbor (På kontoret, Amsterdam)
 
-Bright Harbor designs digital tools for the maritime industry. We're looking for
-a Junior UX Designer to join our small, close-knit product team on-site in
-Amsterdam.
+Bright Harbor designer digitale verktøy for maritim industri. Vi ser etter
+en junior UX-designer til å bli med i vårt lille, tette produktteam på
+kontoret i Amsterdam.
 
-In this role you will
-- Turn user research into wireframes and interactive prototypes
-- Contribute to and help maintain our design system in Figma
-- Run usability sessions and synthesise findings
-- Collaborate daily with product and engineering
+I denne rollen vil du
+- Omsette brukerundersøkelser til wireframes og interaktive prototyper
+- Bidra til og vedlikeholde designsystemet vårt i Figma
+- Gjennomføre brukertester og oppsummere funn
+- Samarbeide daglig med produkt og utvikling
 
-We'd love to see
-- 1-2 years of UX/product design experience (internships count)
-- A portfolio showing your process, not just final screens
-- Proficiency in Figma
-- Curiosity and a willingness to learn
+Vi vil gjerne se
+- 1-2 års erfaring med UX/produktdesign (praksisplasser teller)
+- En portefølje som viser prosessen din, ikke bare ferdige skjermbilder
+- Kompetanse i Figma
+- Nysgjerrighet og vilje til å lære
 
-Nice to have
-- Some familiarity with HTML/CSS
-- Interest in complex, data-heavy interfaces`,
+Fint å ha
+- Noe kjennskap til HTML/CSS
+- Interesse for komplekse, datatunge grensesnitt`,
     },
 ];

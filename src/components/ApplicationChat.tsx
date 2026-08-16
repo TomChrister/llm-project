@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/Input";
 // draft). It's a real user turn so the draft lands in the model's history for
 // follow-ups, but we hide this one bubble so the draft reads as message #1.
 const KICKOFF =
-    "Please draft a first-version cover letter for this role based on the job details.";
+    "Skriv et førsteutkast til søknadsbrev for denne stillingen basert på stillingsdetaljene.";
 
 function messageText(message: UIMessage): string {
     return message.parts
@@ -68,17 +68,17 @@ export function ApplicationChat({
     // the posting gave us a skill to name.
     const quickActions = useMemo(() => {
         const actions = [
-            { label: "Make more formal", text: "Make the cover letter more formal." },
+            { label: "Gjør mer formelt", text: "Gjør søknadsbrevet mer formelt." },
             {
-                label: "Make shorter",
-                text: "Make the cover letter shorter and more concise.",
+                label: "Gjør kortere",
+                text: "Gjør søknadsbrevet kortere og mer konsist.",
             },
         ];
         const skill = jobData.requiredSkills?.[0];
         if (skill) {
             actions.push({
-                label: `Highlight ${skill}`,
-                text: `Revise the letter to highlight my experience with ${skill}.`,
+                label: `Fremhev ${skill}`,
+                text: `Revider brevet for å fremheve min erfaring med ${skill}.`,
             });
         }
         return actions;
@@ -113,7 +113,7 @@ export function ApplicationChat({
             <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pr-1">
                 {awaitingDraft && !error && (
                     <StreamingLine>
-                        Drafting a cover letter from the job details…
+                        Utarbeider søknadsbrev basert på stillingsdetaljene…
                     </StreamingLine>
                 )}
 
@@ -135,7 +135,7 @@ export function ApplicationChat({
 
                 {error && (
                     <p className="text-sm text-[var(--text-danger)]">
-                        Something went wrong. Please try again.
+                        Noe gikk galt. Prøv igjen.
                     </p>
                 )}
             </div>
@@ -158,7 +158,7 @@ export function ApplicationChat({
                     <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask for changes, or tell it about your experience…"
+                        placeholder="Be om endringer, eller fortell om din erfaring…"
                     />
                 </div>
                 <Button type="submit" disabled={isStreaming || !input.trim()}>

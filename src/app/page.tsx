@@ -23,7 +23,7 @@ function errorMessage(error: Error | undefined): string | null {
     } catch {
         // Not JSON — fall through to a generic message.
     }
-    return "Couldn't extract the job details. Please try again.";
+    return "Klarte ikke å hente ut stillingsdetaljene. Prøv igjen.";
 }
 
 export default function Home() {
@@ -105,12 +105,12 @@ export default function Home() {
                         <div>
                             <Wordmark />
                             <p className="mt-2 text-[var(--text-secondary)]">
-                                Paste a job posting URL or its text to extract the
-                                details and draft an application.
+                                Lim inn URL-en til en stillingsannonse eller teksten
+                                for å hente ut detaljene og skrive en søknad.
                             </p>
                         </div>
                         <Button variant="secondary" size="sm" onClick={startOver}>
-                            Start over
+                            Start på nytt
                         </Button>
                     </div>
                 )}

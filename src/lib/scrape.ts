@@ -34,11 +34,11 @@ function assertPublicHttpUrl(raw: string): URL {
     try {
         url = new URL(raw);
     } catch {
-        throw new ScrapeError("That doesn't look like a valid URL.", 400);
+        throw new ScrapeError("Det ser ikke ut som en gyldig URL.", 400);
     }
 
     if (url.protocol !== "http:" && url.protocol !== "https:") {
-        throw new ScrapeError("Only http:// and https:// URLs are supported.", 400);
+        throw new ScrapeError("Bare http:// og https://-URL-er støttes.", 400);
     }
 
     const host = url.hostname.toLowerCase();
@@ -54,7 +54,7 @@ function assertPublicHttpUrl(raw: string): URL {
         /^169\.254\./.test(host) ||
         /^172\.(1[6-9]|2\d|3[01])\./.test(host);
     if (blocked) {
-        throw new ScrapeError("That URL points to a private address.", 400);
+        throw new ScrapeError("Den URL-en peker til en privat adresse.", 400);
     }
 
     return url;
@@ -83,15 +83,15 @@ export async function fetchReadableText(rawUrl: string): Promise<string> {
         const timedOut = err instanceof Error && err.name === "TimeoutError";
         throw new ScrapeError(
             timedOut
-                ? "That page took too long to respond."
-                : "Couldn't reach that page.",
+                ? "Siden brukte for lang tid på å svare."
+                : "Klarte ikke å nå den siden.",
             502,
         );
     }
 
     if (!res.ok) {
         throw new ScrapeError(
-            `That page returned an error (HTTP ${res.status}).`,
+            `Siden returnerte en feil (HTTP ${res.status}).`,
             502,
         );
     }
@@ -99,14 +99,14 @@ export async function fetchReadableText(rawUrl: string): Promise<string> {
     const contentType = res.headers.get("content-type") ?? "";
     if (!contentType.includes("html")) {
         throw new ScrapeError(
-            "That URL isn't an HTML page — paste the text instead.",
+            "Den URL-en er ikke en HTML-side — lim inn teksten i stedet.",
             415,
         );
     }
 
     const html = await res.text();
     if (html.length > MAX_HTML_BYTES) {
-        throw new ScrapeError("That page is too large to process.", 413);
+        throw new ScrapeError("Siden er for stor til å behandles.", 413);
     }
 
     // Readability needs a DOM. Pass the final URL so relative links resolve.
@@ -118,7 +118,7 @@ export async function fetchReadableText(rawUrl: string): Promise<string> {
 
     if (!text || text.length < 50) {
         throw new ScrapeError(
-            "Couldn't find readable job posting content on that page.",
+            "Fant ikke lesbart stillingsannonseinnhold på den siden.",
             422,
         );
     }
