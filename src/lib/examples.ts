@@ -9,8 +9,8 @@ export type ExamplePosting = {
 export const examplePostings: ExamplePosting[] = [
     {
         id: "frontend",
-        label: "Senior Frontend Engineer",
-        text: `Senior Frontend Engineer — Northwind Labs (Remote, EU)
+        label: "Frontend Engineer",
+        text: `Frontend Engineer — Northwind Labs (Remote, EU)
 
 About the role
 Northwind Labs is building a collaborative data-analysis platform used by
