@@ -33,8 +33,8 @@ export function JobInput({
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <SegmentedControl
                 options={[
-                    { label: "Paste text", value: "text" },
-                    { label: "From URL", value: "url" },
+                    { label: "Lim inn tekst", value: "text" },
+                    { label: "Fra URL", value: "url" },
                 ]}
                 value={mode}
                 onChange={setMode}
@@ -52,12 +52,12 @@ export function JobInput({
                     <Textarea
                         value={text}
                         onChange={(e) => setText(e.target.value)}
-                        placeholder="Paste the full job posting here..."
+                        placeholder="Lim inn hele stillingsannonsen her..."
                         rows={10}
                     />
                     <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm text-[var(--text-tertiary)]">
-                            Or try an example:
+                            Eller prøv et eksempel:
                         </span>
                         {examplePostings.map((ex) => (
                             <QuickActionButton
@@ -70,7 +70,7 @@ export function JobInput({
                         ))}
                         {text.length > 0 && (
                             <QuickActionButton onClick={() => setText("")} disabled={busy}>
-                                Clear
+                                Fjern
                             </QuickActionButton>
                         )}
                     </div>
@@ -79,7 +79,7 @@ export function JobInput({
 
             <div>
                 <Button type="submit" disabled={!canSubmit}>
-                    {busy ? "Extracting…" : "Extract details"}
+                    {busy ? "Henter ut…" : "Hent ut detaljer"}
                 </Button>
             </div>
         </form>

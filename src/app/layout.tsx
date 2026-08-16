@@ -22,15 +22,15 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Job Application Assistant",
+  title: "Jobbsøknadsassistent",
   description:
-    "Extract job posting details and draft an application from a URL or text.",
+    "Hent ut stillingsdetaljer og skriv en søknad fra en URL eller tekst.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="no"
       className={`${archivo.variable} ${newsreader.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>

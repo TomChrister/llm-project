@@ -21,13 +21,13 @@ export async function POST(req: Request) {
     try {
         body = await req.json();
     } catch {
-        return Response.json({ error: "Invalid request." }, { status: 400 });
+        return Response.json({ error: "Ugyldig forespørsel." }, { status: 400 });
     }
 
     const value = body.value?.trim();
     if (!value) {
         return Response.json(
-            { error: "Paste a job posting URL or its text first." },
+            { error: "Lim inn en stillingsannonse-URL eller teksten først." },
             { status: 400 },
         );
     }
@@ -42,14 +42,14 @@ export async function POST(req: Request) {
         }
         console.error("Extraction fetch error", err);
         return Response.json(
-            { error: "Couldn't read that job posting." },
+            { error: "Klarte ikke å lese den stillingsannonsen." },
             { status: 500 },
         );
     }
 
     if (body.mode === "text" && text.length < 50) {
         return Response.json(
-            { error: "That text is too short to look like a job posting." },
+            { error: "Teksten er for kort til å ligne en stillingsannonse." },
             { status: 400 },
         );
     }
@@ -60,9 +60,11 @@ export async function POST(req: Request) {
         "You extract structured data from a job posting. Use ONLY information " +
         "present in the posting — never invent a company, location, or skill. " +
         "Omit optional fields you can't determine rather than guessing. Split " +
-        "skills and responsibilities into concise individual items. If the text " +
-        "is clearly not a job posting, return the title 'Not a job posting' with " +
-        "empty arrays.";
+        "skills and responsibilities into concise individual items. Always write " +
+        "every field's value in Norwegian (bokmål), translating from the " +
+        "posting's original language if needed — never leave values in English " +
+        "or another language. If the text is clearly not a job posting, return " +
+        "the title 'Ikke en stillingsannonse' with empty arrays.";
 
     const result = streamObject({
         // Reads ANTHROPIC_API_KEY from .env. Swap to anthropic("claude-opus-5")

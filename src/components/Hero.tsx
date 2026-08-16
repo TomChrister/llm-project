@@ -5,9 +5,9 @@ export function Hero() {
         <div className="flex flex-col items-center gap-4 px-4 pt-16 pb-10 text-center">
             <Wordmark size="lg" />
             <p className="m-0 max-w-[520px] text-base leading-relaxed text-[var(--text-secondary)]">
-                Paste a job posting — or its URL — and get the role, skills, and
-                responsibilities pulled out instantly, plus AI help drafting a cover
-                letter tailored to it.
+                Lim inn en stillingsannonse, eller en URL, og få rollen,
+                ferdighetene og ansvarsområdene hentet ut umiddelbart, pluss AI-hjelp
+                til å skrive et søknadsbrev tilpasset stillingen.
             </p>
         </div>
     );
