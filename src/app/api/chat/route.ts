@@ -2,6 +2,10 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import type { JobPosting } from "@/lib/schema";
 
+// Vercel's default function timeout (10s on Hobby) can be shorter than a
+// full cover-letter generation, especially on longer revisions.
+export const maxDuration = 60;
+
 // The client sends `jobData` with every request (via the chat transport body),
 // so the extracted posting stays in the system context for the whole
 // conversation — not just the first turn.

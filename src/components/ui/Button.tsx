@@ -21,7 +21,7 @@ export function Button({
     return (
         <button
             {...props}
-            className={`rounded-lg font-medium disabled:cursor-default disabled:opacity-50 ${sizeClasses} ${variantClasses} ${className}`}
+            className={`cursor-pointer rounded-lg font-medium disabled:cursor-default disabled:opacity-50 ${sizeClasses} ${variantClasses} ${className}`}
         />
     );
 }
@@ -34,7 +34,7 @@ export function QuickActionButton({
         <button
             type="button"
             {...props}
-            className={`rounded-full border border-[var(--border-default)] px-3.5 py-1 text-[13px] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] disabled:cursor-default disabled:opacity-50 ${className}`}
+            className={`cursor-pointer rounded-full border border-[var(--border-default)] px-3.5 py-1 text-[13px] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] disabled:cursor-default disabled:opacity-50 ${className}`}
         />
     );
 }

@@ -6,6 +6,9 @@ import { fetchReadableText, ScrapeError } from "@/lib/scrape";
 // jsdom needs the Node.js runtime (it isn't Edge-compatible), which is the
 // App Router default — declaring it here makes that requirement explicit.
 export const runtime = "nodejs";
+// Vercel's default function timeout (10s on Hobby) can be shorter than a
+// slow page fetch + full streamObject generation combined.
+export const maxDuration = 60;
 
 type ExtractBody = { mode?: "url" | "text"; value?: string };
 
