@@ -68,6 +68,11 @@ export function JobInput({
                                 {ex.label}
                             </QuickActionButton>
                         ))}
+                        {text.length > 0 && (
+                            <QuickActionButton onClick={() => setText("")} disabled={busy}>
+                                Clear
+                            </QuickActionButton>
+                        )}
                     </div>
                 </>
             )}
