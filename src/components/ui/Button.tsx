@@ -21,7 +21,7 @@ export function Button({
     return (
         <button
             {...props}
-            className={`cursor-pointer rounded-lg font-medium disabled:cursor-default disabled:opacity-50 ${sizeClasses} ${variantClasses} ${className}`}
+            className={`shrink-0 cursor-pointer rounded-lg font-medium whitespace-nowrap disabled:cursor-default disabled:opacity-50 ${sizeClasses} ${variantClasses} ${className}`}
         />
     );
 }
