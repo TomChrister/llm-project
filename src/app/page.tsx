@@ -122,7 +122,7 @@ export default function Home() {
                 {!currentJob ? (
                     <Hero />
                 ) : (
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start justify-between pt-6 gap-4">
                         <div>
                             <Wordmark />
                             <p className="mt-2 text-[var(--text-secondary)]">
