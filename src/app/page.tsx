@@ -36,6 +36,8 @@ export default function Home() {
     const [currentId, setCurrentId] = useState<string | null>(null);
     // Bumped on "New extraction" to remount JobInput with a clean slate.
     const [resetKey, setResetKey] = useState(0);
+    // Sidebar renders as a slide-in drawer below the md breakpoint.
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const { submit, object, isLoading, error, clear } = useObject({
         api: "/api/extract",
@@ -93,11 +95,30 @@ export default function Home() {
                 onSelect={selectJob}
                 onNew={startOver}
                 onDelete={deleteJob}
+                open={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
             />
 
             <main
-                className={`mx-auto w-full max-w-[768px] flex-1 px-4 pb-16 ${currentJob ? "pt-12" : "pt-0"}`}
+                className={`mx-auto w-full max-w-[768px] flex-1 px-4 pb-16 ${currentJob ? "" : "pt-0"}`}
             >
+                <button
+                    type="button"
+                    onClick={() => setSidebarOpen(true)}
+                    aria-label="Åpne meny"
+                    className="my-6 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] md:hidden"
+                >
+                    <svg
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        className="h-4 w-4"
+                    >
+                        <path strokeLinecap="round" d="M3 5h14M3 10h14M3 15h14" />
+                    </svg>
+                </button>
+
                 {!currentJob ? (
                     <Hero />
                 ) : (
