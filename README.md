@@ -1,5 +1,7 @@
 # Job Application Assistant
 
+[![CI](https://github.com/TomChrister/llm-document/actions/workflows/ci.yml/badge.svg)](https://github.com/TomChrister/llm-document/actions/workflows/ci.yml)
+
 Paste a job posting, as a URL or as plain text, and get its details pulled
 out into a structured card (role, company, skills, responsibilities), then
 chat with an AI assistant that drafts and refines a cover letter tailored to
