@@ -82,3 +82,7 @@ This is a standard Next.js app and deploys to [Vercel](https://vercel.com)
 like any other. Add `ANTHROPIC_API_KEY` as an environment variable in your
 Vercel project settings, it's only in your local `.env` (gitignored) and
 won't otherwise reach the deployed app.
+
+`main` is protected by a GitHub ruleset requiring the [CI workflow](.github/workflows/ci.yml)
+to pass before merging, so Vercel only ever deploys a build that has passed
+lint, type checks, and tests.
