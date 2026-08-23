@@ -15,6 +15,12 @@ export type SavedJob = {
     jobData: JobPosting;
     messages: UIMessage[];
     createdAt: number;
+    /**
+     * The URL the posting was extracted from, so the job card can link back to
+     * the original ad. Absent for postings pasted as text, and for entries
+     * saved before this was tracked.
+     */
+    sourceUrl?: string;
 };
 
 const STORAGE_KEY = "jaa-saved-jobs-v1";

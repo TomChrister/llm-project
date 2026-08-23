@@ -56,15 +56,21 @@ export async function POST(req: Request) {
 
     const posting = text.slice(0, MAX_TEXT_CHARS);
 
+    // The UI is Norwegian, but the postings people paste often aren't. The
+    // extracted values are quotes from the posting — a job title and a skill
+    // list read wrong once translated — so they follow the posting's own
+    // language rather than the app's.
     const system =
         "You extract structured data from a job posting. Use ONLY information " +
         "present in the posting — never invent a company, location, or skill. " +
         "Omit optional fields you can't determine rather than guessing. Split " +
-        "skills and responsibilities into concise individual items. Always write " +
-        "every field's value in Norwegian (bokmål), translating from the " +
-        "posting's original language if needed — never leave values in English " +
-        "or another language. If the text is clearly not a job posting, return " +
-        "the title 'Ikke en stillingsannonse' with empty arrays.";
+        "skills and responsibilities into concise individual items. Write every " +
+        "field's value in the language the posting itself is written in: an " +
+        "English posting stays English, a Norwegian one stays Norwegian " +
+        "(bokmål). Keep the posting's own wording for titles and skill names " +
+        "rather than translating them. If the posting's language is unclear, " +
+        "use Norwegian. If the text is clearly not a job posting, return the " +
+        "title 'Ikke en stillingsannonse' with empty arrays.";
 
     const result = streamObject({
         // Reads ANTHROPIC_API_KEY from .env. Swap to anthropic("claude-opus-5")
