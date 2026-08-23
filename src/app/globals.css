@@ -45,8 +45,10 @@
   --bg-surface: #ffffff;
   --bg-surface-hover: rgba(20, 24, 31, 0.05);
   --bg-input: #ffffff;
-  --bg-accent: var(--accent-500);
-  --bg-accent-hover: var(--accent-600);
+  /* One step darker than the palette's mid accent, for a bit more weight on
+     the primary button and the active segmented-control tab. */
+  --bg-accent: var(--accent-600);
+  --bg-accent-hover: var(--accent-700);
 
   --text-primary: var(--gray-100);
   --text-secondary: var(--gray-300);

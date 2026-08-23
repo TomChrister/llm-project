@@ -39,7 +39,25 @@ function TagList({
     );
 }
 
-export function JobDetails({ job }: { job: PartialJob }) {
+// ATS URLs are long enough to blow out the card, so show host + path and let
+// the title attribute carry the full thing.
+function displayUrl(raw: string): string {
+    try {
+        const url = new URL(raw);
+        const path = url.pathname === "/" ? "" : url.pathname.replace(/\/$/, "");
+        return `${url.host}${path}`;
+    } catch {
+        return raw;
+    }
+}
+
+export function JobDetails({
+    job,
+    sourceUrl,
+}: {
+    job: PartialJob;
+    sourceUrl?: string;
+}) {
     const responsibilities =
         job.responsibilities?.filter((v): v is string => Boolean(v)) ?? [];
 
@@ -53,6 +71,17 @@ export function JobDetails({ job }: { job: PartialJob }) {
                     <p className="mt-1 text-sm text-[var(--text-secondary)]">
                         {job.company}
                     </p>
+                )}
+                {sourceUrl && (
+                    <a
+                        href={sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={sourceUrl}
+                        className="mt-1 inline-block max-w-full truncate align-bottom text-sm text-[var(--text-tertiary)] underline decoration-[var(--border-default)] underline-offset-2 hover:text-[var(--accent-400)] hover:decoration-[var(--accent-400)]"
+                    >
+                        {displayUrl(sourceUrl)}
+                    </a>
                 )}
             </header>
 

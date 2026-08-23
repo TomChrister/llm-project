@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useObject } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
-import { JobInput } from "@/components/JobInput";
+import { JobInput, type ExtractMode } from "@/components/JobInput";
 import { JobDetails } from "@/components/JobDetails";
 import { ApplicationChat } from "@/components/ApplicationChat";
 import { Sidebar } from "@/components/Sidebar";
@@ -38,6 +38,12 @@ export default function Home() {
     const [resetKey, setResetKey] = useState(0);
     // Sidebar renders as a slide-in drawer below the md breakpoint.
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    // The URL the running extraction was started from (null when the posting
+    // was pasted as text), so the job card can link back to the original ad.
+    // Mirrored in a ref because onFinish is called from inside useObject and
+    // would otherwise close over the value from the render that started it.
+    const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+    const pendingUrlRef = useRef<string | null>(null);
 
     const { submit, object, isLoading, error, clear } = useObject({
         api: "/api/extract",
@@ -47,6 +53,7 @@ export default function Home() {
             const entry: SavedJob = {
                 id: crypto.randomUUID(),
                 jobData: object,
+                sourceUrl: pendingUrlRef.current ?? undefined,
                 messages: [],
                 createdAt: Date.now(),
             };
@@ -58,8 +65,17 @@ export default function Home() {
     const message = errorMessage(error);
     const currentJob = savedJobs.find((j) => j.id === currentId) ?? null;
 
+    function startExtraction(mode: ExtractMode, value: string) {
+        const url = mode === "url" ? value : null;
+        pendingUrlRef.current = url;
+        setPendingUrl(url);
+        submit({ mode, value });
+    }
+
     function startOver() {
         setCurrentId(null);
+        pendingUrlRef.current = null;
+        setPendingUrl(null);
         clear();
         setResetKey((k) => k + 1);
     }
@@ -142,7 +158,7 @@ export default function Home() {
                         <JobInput
                             key={resetKey}
                             busy={isLoading}
-                            onExtract={(mode, value) => submit({ mode, value })}
+                            onExtract={startExtraction}
                         />
                         {message && (
                             <p className="mt-4 text-[var(--text-danger)]">{message}</p>
@@ -153,14 +169,17 @@ export default function Home() {
                 {/* Live-streaming details during extraction. */}
                 {!currentJob && object && (
                     <div className="mt-8">
-                        <JobDetails job={object} />
+                        <JobDetails job={object} sourceUrl={pendingUrl ?? undefined} />
                     </div>
                 )}
 
                 {/* Chat phase — final details plus the application assistant. */}
                 {currentJob && (
                     <div className="mt-8 space-y-8">
-                        <JobDetails job={currentJob.jobData} />
+                        <JobDetails
+                            job={currentJob.jobData}
+                            sourceUrl={currentJob.sourceUrl}
+                        />
                         <ApplicationChat
                             key={currentJob.id}
                             jobId={currentJob.id}

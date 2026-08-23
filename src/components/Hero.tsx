@@ -9,6 +9,10 @@ export function Hero() {
                 ferdighetene og ansvarsområdene hentet ut umiddelbart, pluss AI-hjelp
                 til å skrive et søknadsbrev tilpasset stillingen.
             </p>
+            <p className="m-0 max-w-[520px] text-sm text-[var(--text-tertiary)]">
+                Annonser på engelsk fungerer også, da kommer både detaljene og
+                søknadsbrevet tilbake på engelsk.
+            </p>
         </div>
     );
 }

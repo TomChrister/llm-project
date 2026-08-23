@@ -35,7 +35,7 @@ it.
 - [Vercel AI SDK](https://ai-sdk.dev) (`streamObject` for extraction,
   `streamText` for chat) with the Anthropic provider
 - [Zod](https://zod.dev) for the extraction schema
-- `@mozilla/readability` + `jsdom` for server-side URL scraping
+- `@mozilla/readability` + `linkedom` for server-side URL scraping
 - Tailwind CSS v4
 
 ## Getting started
@@ -55,12 +55,29 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+### Optional: rendering JavaScript-only job pages
+
+Most job pages can be read from their HTML (see [Reading a job URL](#reading-a-job-url)),
+but a page that builds itself entirely in the browser gives a server-side
+fetch nothing to read. To cover those too, point the app at a service that
+executes the page's JavaScript:
+
+```bash
+SCRAPE_RENDER_ENDPOINT=https://r.jina.ai/{url}   # {url} is replaced, URL-encoded
+SCRAPE_RENDER_TOKEN=...                          # optional bearer token
+```
+
+Anything that takes a URL and returns rendered HTML or plain text works —
+[Jina Reader](https://jina.ai/reader/), Browserless, ScrapingBee. Without it
+the app simply asks the user to paste the text instead. Note that this sends
+the URL to a third party.
+
 ## Project structure
 
 ```
 src/
   app/
-    api/extract/route.ts   # URL fetch + Readability + streamObject extraction
+    api/extract/route.ts   # URL fetch + streamObject extraction
     api/chat/route.ts      # streamText chat, job data as persistent system context
     page.tsx                # orchestrates input/extraction/chat + history state
   components/
@@ -71,10 +88,37 @@ src/
     ui/                      # design-system primitives (Button, Chip, Card, ...)
   lib/
     schema.ts                # shared Zod schema for the extracted job posting
-    scrape.ts                # URL fetch + Readability, with SSRF guarding
+    scrape.ts                 # URL fetch orchestration + SSRF guarding
+    scrape-adapters.ts        # public JSON APIs of known ATS platforms
+    scrape-extractors.ts      # JSON-LD / Readability / hydration-payload extractors
+    scrape-text.ts            # HTML-to-text and field-formatting helpers
     storage.ts                # localStorage-backed job history (useSyncExternalStore)
     examples.ts               # fictional example postings for the input screen
 ```
+
+## Reading a job URL
+
+No single technique reads every job board, so `fetchReadableText` runs a chain
+of strategies and takes the first that yields a real posting:
+
+| # | Strategy | Catches |
+|---|----------|---------|
+| 1 | **ATS adapter** — the board's public JSON API | BambooHR, Greenhouse, Lever |
+| 2 | **JSON-LD** — a schema.org `JobPosting` in the page | anything indexed by Google Jobs |
+| 3 | **Readability** — Firefox Reader View's algorithm | ordinary server-rendered pages |
+| 4 | **Hydration payload** — `__NEXT_DATA__`, `__NUXT__`, `application/json` | client-rendered pages that still ship their data |
+| 5 | **Renderer** — an external service that runs the page's JS | everything else, if configured |
+
+Steps 1–4 need nothing but a fetch. Step 5 is opt-in (see
+[above](#optional-rendering-javascript-only-job-pages)). When all of them come
+up empty the user is told the page needs JavaScript and pointed at the
+paste-the-text input, which always works.
+
+Supporting another board is a local change in `scrape-adapters.ts`: a
+`resolve()` mapping the public URL to the API URL, a `parse()` turning the
+response into text, and one entry in `ADAPTERS`. Live smoke tests for the
+existing adapters live in `scrape.live.test.ts` and run with
+`SCRAPE_LIVE_TESTS=1 npm test -- scrape.live`.
 
 ## Deploying
 
