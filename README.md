@@ -31,7 +31,8 @@ it.
 
 ## Tech stack
 
-- [Next.js](https://nextjs.org) (App Router) + TypeScript
+- [React](https://react.dev) + [Vite](https://vite.dev) + TypeScript
+- [Hono](https://hono.dev) on Node for the API
 - [Vercel AI SDK](https://ai-sdk.dev) (`streamObject` for extraction,
   `streamText` for chat) with the Anthropic provider
 - [Zod](https://zod.dev) for the extraction schema
@@ -46,14 +47,15 @@ Create a `.env` file with an Anthropic API key:
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Then install dependencies and run the dev server:
+Then install dependencies and start both halves (Vite on 5173, the API on
+3001; Vite proxies `/api` to it):
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:5173](http://localhost:5173).
 
 ### Optional: rendering JavaScript-only job pages
 
@@ -122,11 +124,36 @@ existing adapters live in `scrape.live.test.ts` and run with
 
 ## Deploying
 
-This is a standard Next.js app and deploys to [Vercel](https://vercel.com)
-like any other. Add `ANTHROPIC_API_KEY` as an environment variable in your
-Vercel project settings, it's only in your local `.env` (gitignored) and
-won't otherwise reach the deployed app.
+The app is two deployables: the static client and the API. The client stays
+on [Vercel](https://vercel.com); the API is a long-running Node process, so
+it runs anywhere that hosts a container.
+
+**1. Deploy the API.** The `Dockerfile` builds only `server/` and `shared/`,
+and works unchanged on Fly, Render, Railway, Cloud Run or a VPS:
+
+```bash
+docker build -t jobbsoknad-api .
+docker run -p 3001:3001 -e ANTHROPIC_API_KEY=... jobbsoknad-api
+```
+
+The host supplies `PORT`; the server binds `0.0.0.0` so it is reachable from
+outside the container. `GET /api/health` is there for health checks.
+
+**2. Point Vercel at it.** Replace the placeholder host in `vercel.json`
+with the API's real URL. That rewrite is what keeps the whole thing on one
+origin: the browser only ever calls `/api/...` on the Vercel domain, and
+Vercel proxies it onward server-side — so neither side needs CORS, and the
+client needs no base URL.
+
+**3. Set the Vercel project's framework preset to Vite** (`vercel.json`
+declares it too). The second rewrite sends every non-API path to
+`index.html`, without which a hard reload on any deep link 404s.
+
+`ANTHROPIC_API_KEY` belongs in the API host's environment and nowhere else —
+not in Vercel, which never runs a line of server code. It is only in your
+local `.env` (gitignored) and never reaches the client bundle. Keep it that
+way by leaving every Anthropic call in `server/`.
 
 `main` is protected by a GitHub ruleset requiring the [CI workflow](.github/workflows/ci.yml)
-to pass before merging, so Vercel only ever deploys a build that has passed
-lint, type checks, and tests.
+to pass before merging, so only a build that has passed lint, type checks,
+and tests can reach `main`.

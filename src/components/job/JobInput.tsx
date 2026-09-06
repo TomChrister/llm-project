@@ -1,8 +1,6 @@
-"use client";
-
 import { useState } from "react";
 import { examplePostings } from "@/lib/examples";
-import { normalizeUrlInput } from "@/lib/url";
+import { normalizeUrlInput } from "@shared/url";
 import { Button, QuickActionButton } from "@/components/ui/Button";
 import { Input, SegmentedControl, Textarea } from "@/components/ui/Input";
 

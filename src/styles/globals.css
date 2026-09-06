@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
 /* Registers the font-sans / font-display / font-mono utilities from the
-   Claude Design tokens (Archivo / italic Newsreader / IBM Plex Mono). */
+   Claude Design tokens (Archivo / italic Newsreader / IBM Plex Mono).
+   The families themselves are self-hosted via @fontsource and imported
+   in main.tsx — next/font used to generate these variables for us. */
 @theme inline {
-  --font-sans: var(--font-archivo), ui-sans-serif, -apple-system, "Segoe UI",
-    Arial, sans-serif;
-  --font-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo,
+  --font-sans: "Archivo", ui-sans-serif, -apple-system, "Segoe UI", Arial,
+    sans-serif;
+  --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo,
     monospace;
 }
 
@@ -80,7 +82,17 @@
   box-sizing: border-box;
 }
 
+html {
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
+  min-height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
   background: var(--bg-page);
   color: var(--text-primary);
   font-family: var(--font-sans);

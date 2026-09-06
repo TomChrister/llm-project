@@ -1,6 +1,4 @@
-"use client";
-
-import type { JobPosting } from "@/lib/schema";
+import type { JobPosting } from "@shared/schema";
 import { Card } from "@/components/ui/Card";
 import { Chip, MetaField } from "@/components/ui/Chip";
 

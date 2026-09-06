@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Sidebar } from "@/components/Sidebar";
+import { Sidebar } from "@/components/layout/Sidebar";
 import type { SavedJob } from "@/lib/storage";
 
 function makeJob(id: string, title: string, company?: string): SavedJob {

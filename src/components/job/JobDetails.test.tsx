@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { JobDetails } from "@/components/JobDetails";
+import { JobDetails } from "@/components/job/JobDetails";
 
 describe("JobDetails", () => {
     it("renders title, company, and meta fields", () => {
