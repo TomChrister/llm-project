@@ -104,7 +104,7 @@ export default function Home() {
     );
 
     return (
-        <div className="mx-auto flex w-full max-w-[1200px]">
+        <div className="mx-auto flex w-full max-w-[1248px]">
             <Sidebar
                 jobs={savedJobs}
                 currentId={currentId}
@@ -190,6 +190,12 @@ export default function Home() {
                     </div>
                 )}
             </main>
+
+            {/* Mirrors the sidebar's width so `main` is centred on the page
+                itself rather than on the space left over beside the sidebar.
+                Hidden below md, where the sidebar is a fixed drawer and out
+                of flow anyway. */}
+            <div aria-hidden="true" className="hidden w-60 shrink-0 md:block" />
         </div>
     );
 }
