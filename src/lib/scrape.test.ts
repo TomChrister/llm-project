@@ -217,6 +217,23 @@ describe("fetchReadableText", () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
+    it("assumes https for an address pasted without a scheme", async () => {
+        const spy = stubFetch(() => html("<p>nope</p>"));
+
+        // Only the fetched URL matters here — extraction is covered elsewhere.
+        await fetchReadableText("www.example.com/jobb").catch(() => {});
+
+        expect(String(spy.mock.calls[0][0])).toBe("https://www.example.com/jobb");
+    });
+
+    it("still rejects a private address pasted without a scheme", async () => {
+        const spy = stubFetch(() => html("<p>nope</p>"));
+        await expect(fetchReadableText("localhost:3000/jobb")).rejects.toMatchObject({
+            status: 400,
+        });
+        expect(spy).not.toHaveBeenCalled();
+    });
+
     it("uses the BambooHR API instead of the JavaScript-only page", async () => {
         const spy = stubFetch(() =>
             json({

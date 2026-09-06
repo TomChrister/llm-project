@@ -27,6 +27,7 @@
 import { matchAdapter } from "@/lib/scrape-adapters";
 import { extractFromHtml, looksClientRendered } from "@/lib/scrape-extractors";
 import { MIN_TEXT_CHARS, normalizeWhitespace } from "@/lib/scrape-text";
+import { normalizeUrlInput } from "@/lib/url";
 
 // Thrown for every expected failure so the route can map it to a friendly
 // message + HTTP status instead of a generic 500.
@@ -59,7 +60,10 @@ const USER_AGENT =
 function assertPublicHttpUrl(raw: string): URL {
     let url: URL;
     try {
-        url = new URL(raw);
+        // A pasted address usually has no scheme; assume https rather than
+        // rejecting it. The client normalizes too, but this route is also
+        // reachable directly.
+        url = new URL(normalizeUrlInput(raw));
     } catch {
         throw new ScrapeError("Det ser ikke ut som en gyldig URL.", 400);
     }

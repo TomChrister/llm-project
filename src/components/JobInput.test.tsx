@@ -39,6 +39,33 @@ describe("JobInput", () => {
         expect(onExtract).toHaveBeenCalledWith("url", "https://example.com/job");
     });
 
+    // Regression: the field used to be type="url", so the browser's native
+    // constraint validation silently swallowed the submit for any address
+    // pasted without a scheme — no request, no error, nothing on screen.
+    // (jsdom does not run constraint validation, so this asserts the two
+    // things that actually made it silent: a non-validating input type, and a
+    // scheme added before submit.)
+    it("accepts a URL pasted without a scheme and submits it with https", async () => {
+        const user = userEvent.setup();
+        const onExtract = vi.fn();
+
+        render(<JobInput busy={false} onExtract={onExtract} />);
+
+        await user.click(screen.getByText("Fra URL"));
+        const field = screen.getByPlaceholderText(
+            "https://company.com/careers/senior-engineer",
+        ) as HTMLInputElement;
+        expect(field.type).not.toBe("url");
+
+        await user.type(field, "  www.finn.no/job/fulltime/ad.html?finnkode=1  ");
+        await user.click(screen.getByRole("button", { name: "Hent ut detaljer" }));
+
+        expect(onExtract).toHaveBeenCalledWith(
+            "url",
+            "https://www.finn.no/job/fulltime/ad.html?finnkode=1",
+        );
+    });
+
     it("fills the textarea from an example posting", async () => {
         const user = userEvent.setup();
 
