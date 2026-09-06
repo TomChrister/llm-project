@@ -4,12 +4,12 @@ export function Hero() {
     return (
         <div className="flex flex-col items-center gap-4 px-4 pt-6 pb-10 text-center">
             <Wordmark size="lg" />
-            <p className="m-0 max-w-[520px] text-base leading-relaxed text-[var(--text-secondary)]">
-                Lim inn en stillingsannonse, eller en URL, og få rollen,
-                ferdighetene og ansvarsområdene hentet ut umiddelbart, pluss AI-hjelp
+            <p className="m-0 max-w-[600px] text-base leading-relaxed text-[var(--text-secondary)]">
+                Lim inn en stillingsannonse, eller en URL, og få rollen, ferdighetene og ansvarsområdene
+                hentet ut umiddelbart, pluss AI-hjelp
                 til å skrive et søknadsbrev tilpasset stillingen.
             </p>
-            <p className="m-0 max-w-[520px] text-sm text-[var(--text-tertiary)]">
+            <p className="m-0 max-w-[600px] text-sm text-[var(--text-tertiary)]">
                 Annonser på engelsk fungerer også, da kommer både detaljene og
                 søknadsbrevet tilbake på engelsk.
             </p>
