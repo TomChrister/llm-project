@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.github
+.vercel
+.env*
+src
+public
+index.html
+vite.config.ts
+eslint.config.mjs
+README.md
+AGENTS.md
+CLAUDE.md
