@@ -17,7 +17,10 @@ export function JobInput({
     busy: boolean;
     onExtract: (mode: ExtractMode, value: string) => void;
 }) {
-    const [mode, setMode] = useState<ExtractMode>("text");
+    // URL is the default mode: a link is how a posting is usually at hand,
+    // and pasting the whole advert is the fallback for the ones we cannot
+    // fetch.
+    const [mode, setMode] = useState<ExtractMode>("url");
     const [url, setUrl] = useState("");
     const [text, setText] = useState("");
 
@@ -39,8 +42,8 @@ export function JobInput({
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <SegmentedControl
                 options={[
-                    { label: "Lim inn tekst", value: "text" },
                     { label: "Fra URL", value: "url" },
+                    { label: "Lim inn tekst", value: "text" },
                 ]}
                 value={mode}
                 onChange={setMode}

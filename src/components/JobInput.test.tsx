@@ -10,6 +10,8 @@ describe("JobInput", () => {
 
         render(<JobInput busy={false} onExtract={onExtract} />);
 
+        await user.click(screen.getByText("Lim inn tekst"));
+
         const submit = screen.getByRole("button", { name: "Hent ut detaljer" });
         expect(submit).toBeDisabled();
 
@@ -23,13 +25,12 @@ describe("JobInput", () => {
         expect(onExtract).toHaveBeenCalledWith("text", "Some job text");
     });
 
-    it("switches to URL mode and submits the URL value", async () => {
+    it("starts in URL mode and submits the URL value", async () => {
         const user = userEvent.setup();
         const onExtract = vi.fn();
 
         render(<JobInput busy={false} onExtract={onExtract} />);
 
-        await user.click(screen.getByText("Fra URL"));
         await user.type(
             screen.getByPlaceholderText("https://company.com/careers/senior-engineer"),
             "https://example.com/job",
@@ -51,7 +52,6 @@ describe("JobInput", () => {
 
         render(<JobInput busy={false} onExtract={onExtract} />);
 
-        await user.click(screen.getByText("Fra URL"));
         const field = screen.getByPlaceholderText(
             "https://company.com/careers/senior-engineer",
         ) as HTMLInputElement;
@@ -71,6 +71,7 @@ describe("JobInput", () => {
 
         render(<JobInput busy={false} onExtract={vi.fn()} />);
 
+        await user.click(screen.getByText("Lim inn tekst"));
         await user.click(screen.getByText("Frontend-utvikler"));
 
         const textarea = screen.getByPlaceholderText(
