@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { JobInput } from "@/components/JobInput";
+import { JobInput } from "@/components/job/JobInput";
 
 describe("JobInput", () => {
     it("disables submit until text is entered, then submits the trimmed value", async () => {

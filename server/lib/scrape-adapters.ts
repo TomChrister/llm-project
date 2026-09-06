@@ -9,7 +9,7 @@
 // Adding a board is deliberately a small, local change: write a resolve() that
 // maps the public URL to the API URL, a parse() that turns the response into
 // text, and append it to ADAPTERS.
-import { get, htmlToText, isObject, joinFields, plainText } from "@/lib/scrape-text";
+import { get, htmlToText, isObject, joinFields, plainText } from "./scrape-text";
 
 export type AtsAdapter = {
     /** Identifies the adapter in logs. */

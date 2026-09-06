@@ -1,88 +1,54 @@
-"use client";
-
-import { useCallback, useRef, useState } from "react";
-import { useObject } from "@ai-sdk/react";
+import { useCallback, useState } from "react";
 import type { UIMessage } from "ai";
-import { JobInput, type ExtractMode } from "@/components/JobInput";
-import { JobDetails } from "@/components/JobDetails";
-import { ApplicationChat } from "@/components/ApplicationChat";
-import { Sidebar } from "@/components/Sidebar";
-import { Hero } from "@/components/Hero";
+import { JobInput } from "@/components/job/JobInput";
+import { JobDetails } from "@/components/job/JobDetails";
+import { ApplicationChat } from "@/components/chat/ApplicationChat";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { Hero } from "@/components/layout/Hero";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { Button } from "@/components/ui/Button";
-import { jobPostingSchema } from "@/lib/schema";
+import { useJobExtraction } from "@/hooks/useJobExtraction";
 import { useSavedJobs, type SavedJob } from "@/lib/storage";
+import type { JobPosting } from "@shared/schema";
 
-// The route returns errors as JSON ({ error }); useObject surfaces a non-2xx
-// response as an Error whose message is the raw body, so parse it back out.
-function errorMessage(error: Error | undefined): string | null {
-    if (!error) return null;
-    try {
-        const parsed = JSON.parse(error.message);
-        if (parsed && typeof parsed.error === "string") return parsed.error;
-    } catch {
-        // Not JSON — fall through to a generic message.
-    }
-    return "Klarte ikke å hente ut stillingsdetaljene. Prøv igjen.";
-}
-
-export default function Home() {
+export function App() {
     // Every finished extraction is saved here (with its chat thread) so the
     // sidebar can list history and switch between past jobs. Backed by
-    // localStorage via useSyncExternalStore, so the server snapshot is always
-    // `[]` (no localStorage during SSR) and React reconciles the real client
-    // snapshot after mount without a hydration mismatch.
+    // localStorage via useSyncExternalStore.
     const [savedJobs, setSavedJobs] = useSavedJobs();
     const [currentId, setCurrentId] = useState<string | null>(null);
     // Bumped on "New extraction" to remount JobInput with a clean slate.
     const [resetKey, setResetKey] = useState(0);
     // Sidebar renders as a slide-in drawer below the md breakpoint.
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    // The URL the running extraction was started from (null when the posting
-    // was pasted as text), so the job card can link back to the original ad.
-    // Mirrored in a ref because onFinish is called from inside useObject and
-    // would otherwise close over the value from the render that started it.
-    const [pendingUrl, setPendingUrl] = useState<string | null>(null);
-    const pendingUrlRef = useRef<string | null>(null);
 
-    const { submit, object, isLoading, error, clear } = useObject({
-        api: "/api/extract",
-        schema: jobPostingSchema,
-        onFinish({ object }) {
-            if (!object) return;
+    const handleExtracted = useCallback(
+        (jobData: JobPosting, sourceUrl?: string) => {
             const entry: SavedJob = {
                 id: crypto.randomUUID(),
-                jobData: object,
-                sourceUrl: pendingUrlRef.current ?? undefined,
+                jobData,
+                sourceUrl,
                 messages: [],
                 createdAt: Date.now(),
             };
             setSavedJobs((prev) => [...prev, entry]);
             setCurrentId(entry.id);
         },
-    });
+        [setSavedJobs],
+    );
 
-    const message = errorMessage(error);
+    const extraction = useJobExtraction(handleExtracted);
     const currentJob = savedJobs.find((j) => j.id === currentId) ?? null;
-
-    function startExtraction(mode: ExtractMode, value: string) {
-        const url = mode === "url" ? value : null;
-        pendingUrlRef.current = url;
-        setPendingUrl(url);
-        submit({ mode, value });
-    }
 
     function startOver() {
         setCurrentId(null);
-        pendingUrlRef.current = null;
-        setPendingUrl(null);
-        clear();
+        extraction.reset();
         setResetKey((k) => k + 1);
     }
 
     function selectJob(id: string) {
         setCurrentId(id);
-        clear();
+        extraction.reset();
     }
 
     function deleteJob(id: string) {
@@ -138,7 +104,7 @@ export default function Home() {
                 {!currentJob ? (
                     <Hero />
                 ) : (
-                    <div className="flex items-start justify-between pt-6 gap-4">
+                    <div className="flex items-start justify-between gap-4 pt-6">
                         <div>
                             <Wordmark />
                             <p className="mt-2 text-[var(--text-secondary)]">
@@ -157,19 +123,24 @@ export default function Home() {
                     <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 shadow-[0_1px_3px_rgba(20,24,31,0.06),0_1px_2px_rgba(20,24,31,0.04)]">
                         <JobInput
                             key={resetKey}
-                            busy={isLoading}
-                            onExtract={startExtraction}
+                            busy={extraction.isLoading}
+                            onExtract={extraction.start}
                         />
-                        {message && (
-                            <p className="mt-4 text-[var(--text-danger)]">{message}</p>
+                        {extraction.message && (
+                            <p className="mt-4 text-[var(--text-danger)]">
+                                {extraction.message}
+                            </p>
                         )}
                     </div>
                 )}
 
                 {/* Live-streaming details during extraction. */}
-                {!currentJob && object && (
+                {!currentJob && extraction.object && (
                     <div className="mt-8">
-                        <JobDetails job={object} sourceUrl={pendingUrl ?? undefined} />
+                        <JobDetails
+                            job={extraction.object}
+                            sourceUrl={extraction.pendingUrl ?? undefined}
+                        />
                     </div>
                 )}
 

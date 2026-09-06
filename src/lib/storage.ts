@@ -3,12 +3,11 @@
 // history entries restores the whole conversation, not just the job card.
 //
 // Exposed as a useSyncExternalStore-backed hook (not plain useState +
-// useEffect) so the initial read is hydration-safe: SSR has no localStorage,
-// so the server snapshot is always `[]`, and React reconciles the real
-// client snapshot after mount without a hydration mismatch.
+// useEffect) so every consumer reads one shared snapshot and re-renders
+// together when localStorage changes, including from another tab.
 import { useCallback, useSyncExternalStore } from "react";
 import type { UIMessage } from "ai";
-import type { JobPosting } from "@/lib/schema";
+import type { JobPosting } from "@shared/schema";
 
 export type SavedJob = {
     id: string;

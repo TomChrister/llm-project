@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fetchReadableText } from "@/lib/scrape";
+import { fetchReadableText } from "./scrape";
 
 // Smoke tests against the real boards, to catch an ATS quietly changing or
 // retiring its public API. They need network access, so they are opt-in and

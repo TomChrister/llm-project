@@ -1,9 +1,19 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# Architecture
 
-# This is NOT the Next.js you know
+Three top-level areas, and code belongs to exactly one of them:
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+- `src/` — the React client, built by Vite. Components live in domain folders
+  (`components/layout`, `components/job`, `components/chat`, `components/ui`),
+  stateful logic in `hooks/`. Reached by the `@/` alias.
+- `server/` — the Hono API on Node. Owns the Anthropic calls and the URL
+  scraping stack (`server/lib/`). Uses relative imports only, so it runs under
+  plain `tsx` with no path resolution.
+- `shared/` — the few modules both sides import (`schema.ts`, `url.ts`).
+  Reached by the `@shared/` alias.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+Anything holding `ANTHROPIC_API_KEY`, or fetching a third-party URL, belongs in
+`server/`. Putting it in `src/` ships the key to the browser and runs the fetch
+against CORS.
 
-<!-- END:nextjs-agent-rules -->
+`npm run dev` starts both halves: Vite on 5173 and the API on 3001, with Vite
+proxying `/api` to it so the browser sees one origin.

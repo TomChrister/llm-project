@@ -31,7 +31,8 @@ it.
 
 ## Tech stack
 
-- [Next.js](https://nextjs.org) (App Router) + TypeScript
+- [React](https://react.dev) + [Vite](https://vite.dev) + TypeScript
+- [Hono](https://hono.dev) on Node for the API
 - [Vercel AI SDK](https://ai-sdk.dev) (`streamObject` for extraction,
   `streamText` for chat) with the Anthropic provider
 - [Zod](https://zod.dev) for the extraction schema
@@ -46,14 +47,15 @@ Create a `.env` file with an Anthropic API key:
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Then install dependencies and run the dev server:
+Then install dependencies and start both halves (Vite on 5173, the API on
+3001; Vite proxies `/api` to it):
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:5173](http://localhost:5173).
 
 ### Optional: rendering JavaScript-only job pages
 
@@ -122,11 +124,15 @@ existing adapters live in `scrape.live.test.ts` and run with
 
 ## Deploying
 
-This is a standard Next.js app and deploys to [Vercel](https://vercel.com)
-like any other. Add `ANTHROPIC_API_KEY` as an environment variable in your
-Vercel project settings, it's only in your local `.env` (gitignored) and
-won't otherwise reach the deployed app.
+The app is two deployables: the static client (`npm run build` → `dist/`)
+and the API (`npm start`, a long-running Node process). Whatever hosts them
+must serve both from one origin, or the client's `/api` calls need a base
+URL and the server needs CORS.
+
+`ANTHROPIC_API_KEY` belongs in the API process's environment. It is only in
+your local `.env` (gitignored) and never reaches the client bundle — keep it
+that way by leaving every Anthropic call in `server/`.
 
 `main` is protected by a GitHub ruleset requiring the [CI workflow](.github/workflows/ci.yml)
-to pass before merging, so Vercel only ever deploys a build that has passed
-lint, type checks, and tests.
+to pass before merging, so only a build that has passed lint, type checks,
+and tests can reach `main`.

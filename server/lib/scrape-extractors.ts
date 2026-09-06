@@ -12,7 +12,7 @@ import {
     isObject,
     joinFields,
     normalizeWhitespace,
-} from "@/lib/scrape-text";
+} from "./scrape-text";
 
 function sufficient(text: string | null | undefined): string | null {
     const trimmed = text?.trim();

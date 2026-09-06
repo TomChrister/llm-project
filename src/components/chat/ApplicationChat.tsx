@@ -1,9 +1,7 @@
-"use client";
-
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { JobPosting } from "@/lib/schema";
+import type { JobPosting } from "@shared/schema";
 import { Button, QuickActionButton } from "@/components/ui/Button";
 import { ChatBubble, StreamingLine } from "@/components/ui/ChatBubble";
 import { Input } from "@/components/ui/Input";
