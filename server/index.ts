@@ -1,20 +1,14 @@
+// Runs the API as a standalone Node process — local development, and the
+// Dockerfile for anyone self-hosting. On Vercel the same app is served by
+// api/[...route].ts instead, and this file is never loaded.
+//
 // Loads ANTHROPIC_API_KEY (and the optional SCRAPE_* settings) from .env.
-// Next.js used to do this implicitly; a plain Node process does not.
+// Next.js used to do this implicitly; a plain Node process does not. Vercel
+// injects its own environment, so the function entrypoint skips this.
 import "dotenv/config";
 
 import { serve } from "@hono/node-server";
-import { Hono } from "hono";
-import { extractRoute } from "./routes/extract";
-import { chatRoute } from "./routes/chat";
-
-// Unlike the old Next route handlers, this is a long-running process, so the
-// `runtime` / `maxDuration` exports they carried have no equivalent here —
-// nothing kills a request at 10 or 60 seconds.
-const app = new Hono();
-
-app.get("/api/health", (c) => c.json({ ok: true }));
-app.route("/api/extract", extractRoute);
-app.route("/api/chat", chatRoute);
+import { app } from "./app";
 
 // The host injects PORT; 3001 is the local default that vite.config.ts
 // proxies to. Binding 0.0.0.0 rather than loopback is what makes the
