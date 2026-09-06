@@ -22,7 +22,10 @@ export default defineConfig({
         // side — in production the same is achieved by serving both from the
         // same host.
         proxy: {
-            "/api": "http://localhost:3001",
+            // 127.0.0.1, not localhost: the API binds 0.0.0.0 (IPv4 only, for
+            // containers), while Node resolves "localhost" to ::1 first on
+            // Windows. That mismatch makes every proxied call a 502.
+            "/api": "http://127.0.0.1:3001",
         },
     },
     test: {
