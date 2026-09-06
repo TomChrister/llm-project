@@ -7,6 +7,6 @@
 // vercel.json raises it to 60s, because a slow page fetch plus a full
 // generation does not fit in the 10s default.
 import { handle } from "hono/vercel";
-import { app } from "../server/app";
+import { app } from "../server/app.js";
 
 export default handle(app);

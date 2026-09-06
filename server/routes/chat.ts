@@ -1,7 +1,7 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { Hono } from "hono";
-import type { JobPosting } from "../../shared/schema";
+import type { JobPosting } from "../../shared/schema.js";
 
 type ChatBody = { messages: UIMessage[]; jobData?: JobPosting };
 

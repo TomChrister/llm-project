@@ -24,10 +24,10 @@
 // package that breaks when Next.js externalizes jsdom for the serverless
 // bundle on Vercel (raw require() of an ESM file). linkedom has none of that
 // and is small enough to just bundle normally.
-import { matchAdapter } from "./scrape-adapters";
-import { extractFromHtml, looksClientRendered } from "./scrape-extractors";
-import { MIN_TEXT_CHARS, normalizeWhitespace } from "./scrape-text";
-import { normalizeUrlInput } from "../../shared/url";
+import { matchAdapter } from "./scrape-adapters.js";
+import { extractFromHtml, looksClientRendered } from "./scrape-extractors.js";
+import { MIN_TEXT_CHARS, normalizeWhitespace } from "./scrape-text.js";
+import { normalizeUrlInput } from "../../shared/url.js";
 
 // Thrown for every expected failure so the route can map it to a friendly
 // message + HTTP status instead of a generic 500.

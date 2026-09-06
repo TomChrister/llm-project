@@ -8,7 +8,7 @@
 import "dotenv/config";
 
 import { serve } from "@hono/node-server";
-import { app } from "./app";
+import { app } from "./app.js";
 
 // The host injects PORT; 3001 is the local default that vite.config.ts
 // proxies to. Binding 0.0.0.0 rather than loopback is what makes the
