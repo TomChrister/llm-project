@@ -124,12 +124,36 @@ existing adapters live in `scrape.live.test.ts` and run with
 
 ## Deploying
 
-The app is two deployables: the static client and the API. The client stays
-on [Vercel](https://vercel.com); the API is a long-running Node process, so
-it runs anywhere that hosts a container.
+Everything deploys to [Vercel](https://vercel.com) as one project. The client
+is a static Vite build; the API is the same Hono app served as a function.
 
-**1. Deploy the API.** The `Dockerfile` builds only `server/` and `shared/`,
-and works unchanged on Fly, Render, Railway, Cloud Run or a VPS:
+`server/app.ts` builds the app and mounts the routes; nothing in it knows
+where it runs. Two entrypoints pick that up:
+
+- `api/[...route].ts` — the Vercel function. The catch-all filename means
+  Vercel's filesystem routing hands it every `/api/*` request with the path
+  intact, so the app routes exactly as it does under Node.
+- `server/index.ts` — a standalone Node process, used by `npm run dev` and by
+  the `Dockerfile`. Vercel never loads it.
+
+Because both halves are served from one origin, the client's relative `/api`
+calls need no base URL and neither side needs CORS.
+
+Set `ANTHROPIC_API_KEY` as an environment variable in the Vercel project. It
+is read only inside `server/`, never reaches the client bundle, and is only
+in your local `.env` (gitignored) otherwise. Keep it that way by leaving
+every Anthropic call in `server/`.
+
+Two settings in `vercel.json` are load-bearing. `functions.maxDuration` is
+60s because a slow page fetch plus a full generation does not fit in the 10s
+default — the request would be cut off mid-stream. The rewrite sends every
+path *except* `/api/` to `index.html`, without which a hard reload on a deep
+link 404s.
+
+### Self-hosting instead
+
+The `Dockerfile` carries only `server/` and `shared/`, and runs unchanged on
+Fly, Render, Railway, Cloud Run or a VPS:
 
 ```bash
 docker build -t jobbsoknad-api .
@@ -137,22 +161,9 @@ docker run -p 3001:3001 -e ANTHROPIC_API_KEY=... jobbsoknad-api
 ```
 
 The host supplies `PORT`; the server binds `0.0.0.0` so it is reachable from
-outside the container. `GET /api/health` is there for health checks.
-
-**2. Point Vercel at it.** Replace the placeholder host in `vercel.json`
-with the API's real URL. That rewrite is what keeps the whole thing on one
-origin: the browser only ever calls `/api/...` on the Vercel domain, and
-Vercel proxies it onward server-side — so neither side needs CORS, and the
-client needs no base URL.
-
-**3. Set the Vercel project's framework preset to Vite** (`vercel.json`
-declares it too). The second rewrite sends every non-API path to
-`index.html`, without which a hard reload on any deep link 404s.
-
-`ANTHROPIC_API_KEY` belongs in the API host's environment and nowhere else —
-not in Vercel, which never runs a line of server code. It is only in your
-local `.env` (gitignored) and never reaches the client bundle. Keep it that
-way by leaving every Anthropic call in `server/`.
+outside the container, and `GET /api/health` is there for health checks. To
+point a separately hosted client at it, replace the rewrite in `vercel.json`
+with one whose destination is the API's own URL.
 
 `main` is protected by a GitHub ruleset requiring the [CI workflow](.github/workflows/ci.yml)
 to pass before merging, so only a build that has passed lint, type checks,

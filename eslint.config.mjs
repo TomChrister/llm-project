@@ -22,9 +22,10 @@ export default defineConfig([
             globals: globals.browser,
         },
     },
-    // The backend runs in Node and ships no React components.
+    // The backend and the Vercel function run in Node, not the browser,
+    // and ship no React components.
     {
-        files: ["server/**/*.ts", "vite.config.ts"],
+        files: ["server/**/*.ts", "api/**/*.ts", "vite.config.ts"],
         languageOptions: { globals: globals.node },
         rules: { "react-refresh/only-export-components": "off" },
     },

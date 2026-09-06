@@ -5,9 +5,12 @@ Three top-level areas, and code belongs to exactly one of them:
 - `src/` — the React client, built by Vite. Components live in domain folders
   (`components/layout`, `components/job`, `components/chat`, `components/ui`),
   stateful logic in `hooks/`. Reached by the `@/` alias.
-- `server/` — the Hono API on Node. Owns the Anthropic calls and the URL
-  scraping stack (`server/lib/`). Uses relative imports only, so it runs under
-  plain `tsx` with no path resolution.
+- `server/` — the Hono API. Owns the Anthropic calls and the URL scraping
+  stack (`server/lib/`). Uses relative imports only, so it runs under plain
+  `tsx` with no path resolution. `app.ts` is the app itself; `index.ts` is
+  only the Node entrypoint.
+- `api/` — the Vercel function wrapping that same app. One line; put no
+  logic here.
 - `shared/` — the few modules both sides import (`schema.ts`, `url.ts`).
   Reached by the `@shared/` alias.
 
