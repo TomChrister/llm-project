@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { examplePostings } from "@/lib/examples";
+import { normalizeUrlInput } from "@/lib/url";
 import { Button, QuickActionButton } from "@/components/ui/Button";
 import { Input, SegmentedControl, Textarea } from "@/components/ui/Input";
 
@@ -26,7 +27,12 @@ export function JobInput({
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!canSubmit) return;
-        onExtract(mode, value.trim());
+        // URLs get a scheme added here rather than server-side only, so the
+        // value the parent keeps for the "source" link is a usable absolute URL.
+        onExtract(
+            mode,
+            mode === "url" ? normalizeUrlInput(value) : value.trim(),
+        );
     }
 
     return (
@@ -41,8 +47,16 @@ export function JobInput({
             />
 
             {mode === "url" ? (
+                // Deliberately not type="url": that hands the browser native
+                // constraint validation, which silently refuses to submit the
+                // form for anything without a scheme ("www.finn.no/...") — no
+                // submit event, no request, no error, nothing. inputMode keeps
+                // the URL keyboard on mobile without that behaviour.
                 <Input
-                    type="url"
+                    type="text"
+                    inputMode="url"
+                    autoComplete="url"
+                    spellCheck={false}
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder="https://company.com/careers/senior-engineer"
