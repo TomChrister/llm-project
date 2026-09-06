@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ScrapeError, fetchReadableText } from "./scrape";
-import { matchAdapter } from "./scrape-adapters";
+import { ScrapeError, fetchReadableText } from "./scrape.js";
+import { matchAdapter } from "./scrape-adapters.js";
 import {
     fromEmbeddedJson,
     fromJsonLd,
     fromReadability,
     looksClientRendered,
-} from "./scrape-extractors";
-import { htmlToText } from "./scrape-text";
+} from "./scrape-extractors.js";
+import { htmlToText } from "./scrape-text.js";
 
 // Long enough to clear MIN_TEXT_CHARS (200) / MIN_EMBEDDED_CHARS (400).
 const BODY = (

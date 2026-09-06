@@ -1,8 +1,8 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { streamObject } from "ai";
 import { Hono } from "hono";
-import { jobPostingSchema } from "../../shared/schema";
-import { fetchReadableText, ScrapeError } from "../lib/scrape";
+import { jobPostingSchema } from "../../shared/schema.js";
+import { fetchReadableText, ScrapeError } from "../lib/scrape.js";
 
 type ExtractBody = { mode?: "url" | "text"; value?: string };
 
