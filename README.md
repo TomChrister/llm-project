@@ -133,8 +133,8 @@ where it runs. Two entrypoints pick that up:
 - `api/[...route].ts` — the Vercel function. The catch-all filename means
   Vercel's filesystem routing hands it every `/api/*` request with the path
   intact, so the app routes exactly as it does under Node.
-- `server/index.ts` — a standalone Node process, used by `npm run dev` and by
-  the `Dockerfile`. Vercel never loads it.
+- `server/index.ts` — a standalone Node process, used by `npm run dev`.
+  Vercel never loads it.
 
 Because both halves are served from one origin, the client's relative `/api`
 calls need no base URL and neither side needs CORS.
@@ -149,21 +149,6 @@ Two settings in `vercel.json` are load-bearing. `functions.maxDuration` is
 default — the request would be cut off mid-stream. The rewrite sends every
 path *except* `/api/` to `index.html`, without which a hard reload on a deep
 link 404s.
-
-### Self-hosting instead
-
-The `Dockerfile` carries only `server/` and `shared/`, and runs unchanged on
-Fly, Render, Railway, Cloud Run or a VPS:
-
-```bash
-docker build -t jobbsoknad-api .
-docker run -p 3001:3001 -e ANTHROPIC_API_KEY=... jobbsoknad-api
-```
-
-The host supplies `PORT`; the server binds `0.0.0.0` so it is reachable from
-outside the container, and `GET /api/health` is there for health checks. To
-point a separately hosted client at it, replace the rewrite in `vercel.json`
-with one whose destination is the API's own URL.
 
 `main` is protected by a GitHub ruleset requiring the [CI workflow](.github/workflows/ci.yml)
 to pass before merging, so only a build that has passed lint, type checks,
