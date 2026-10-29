@@ -1,6 +1,6 @@
 // Fictional job postings so the app can be tried without hunting down a real
 // one. Each `text` is what gets dropped into the "Paste text" field.
-export type ExamplePosting = {
+type ExamplePosting = {
     id: string;
     label: string;
     text: string;

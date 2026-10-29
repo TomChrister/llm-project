@@ -1,15 +1,12 @@
 @import "tailwindcss";
 
-/* Registers the font-sans / font-display / font-mono utilities from the
-   Claude Design tokens (Archivo / italic Newsreader / IBM Plex Mono).
-   The families themselves are self-hosted via @fontsource and imported
-   in main.tsx — next/font used to generate these variables for us. */
+/* Registers the font-sans / font-display utilities from the Claude Design
+   tokens (Archivo / italic Newsreader). The families themselves are
+   self-hosted via @fontsource and imported in main.tsx. */
 @theme inline {
   --font-sans: "Archivo", ui-sans-serif, -apple-system, "Segoe UI", Arial,
     sans-serif;
   --font-display: "Newsreader", Georgia, "Times New Roman", serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo,
-    monospace;
 }
 
 /* Design tokens imported from the "Job Application Assistant" Claude Design
@@ -23,18 +20,15 @@
   --gray-900: #eef0f3;
   --gray-800: #e3e6eb;
   --gray-700: #dfe3ea;
-  --gray-600: #c3c9d3;
   --gray-500: #8b93a1;
   --gray-400: #9aa1ad;
   --gray-300: #4b5563;
-  --gray-200: #2c313b;
   --gray-100: #14181f;
 
   --accent-700: #1f3170;
   --accent-600: #28409e;
   --accent-500: #3452c4;
   --accent-400: #6a80d6;
-  --accent-300: #aebbec;
 
   --red-500: #dc2626;
 

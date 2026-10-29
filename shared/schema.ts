@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+// The title the extract prompt asks for when the text isn't a job posting.
+// The client checks for it so such text is never saved or written a letter for.
+export const NOT_A_JOB_TITLE = "Ikke en stillingsannonse";
+
 // Shared between the /api/extract route (streamObject) and the UI (useObject)
 // so the streamed shape stays in sync on both ends. streamObject fills these
 // fields progressively, so every field must tolerate being briefly absent.

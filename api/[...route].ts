@@ -12,8 +12,7 @@
 // Relative imports need their .js extension — the project is "type": "module",
 // so the compiled function runs as strict ESM with no extension guessing.
 //
-// Unlike the old Next route handlers, a function has a wall-clock limit —
-// vercel.json raises it to 60s, because a slow page fetch plus a full
+// A function has a wall-clock limit — vercel.json raises it to 60s, because a slow page fetch plus a full
 // generation does not fit in the 10s default.
 import { app } from "../server/app.js";
 

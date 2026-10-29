@@ -8,7 +8,13 @@ import { parseHTML } from "linkedom";
  * the old 50-char floor let empty pages through; a real posting clears 200
  * without trying.
  */
-export const MIN_TEXT_CHARS = 200;
+const MIN_TEXT_CHARS = 200;
+
+/** The trimmed text if it is long enough to be a real posting, else null. */
+export function sufficient(text: string | null | undefined): string | null {
+    const trimmed = text?.trim();
+    return trimmed && trimmed.length >= MIN_TEXT_CHARS ? trimmed : null;
+}
 
 export function isObject(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);

@@ -34,9 +34,17 @@ export function ApplicationChat({
 }) {
     const [input, setInput] = useState("");
 
+    // A thread with no assistant reply never got its draft (the request
+    // failed, or the user left before it arrived), so all it holds is the
+    // hidden kickoff. Start it fresh so the kickoff below fires again instead
+    // of leaving "Utarbeider…" on screen forever.
+    const [seed] = useState(() =>
+        initialMessages.some((m) => m.role === "assistant") ? initialMessages : [],
+    );
+
     const { messages, sendMessage, status, error } = useChat({
         id: jobId,
-        messages: initialMessages,
+        messages: seed,
         // Sent with every request → persists as system context for the whole
         // conversation, not just the first turn.
         transport: new DefaultChatTransport({
@@ -47,11 +55,14 @@ export function ApplicationChat({
 
     const isStreaming = status === "submitted" || status === "streaming";
 
-    // Persist the thread on every change so picking this job again from the
-    // sidebar restores the full conversation, not just the extracted card.
+    // Persist the thread so picking this job again from the sidebar restores
+    // the full conversation, not just the extracted card. Only once a reply
+    // has finished: each save rewrites the whole history to localStorage, and
+    // doing that per streamed token makes typing lag as history grows.
     useEffect(() => {
+        if (isStreaming) return;
         onMessagesChange(messages);
-    }, [messages, onMessagesChange]);
+    }, [messages, isStreaming, onMessagesChange]);
 
     // Fire the cover-letter draft exactly once for a brand-new job. Jobs
     // restored from history already have messages, so this is skipped.

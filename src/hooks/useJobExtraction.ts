@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useObject } from "@ai-sdk/react";
-import { jobPostingSchema, type JobPosting } from "@shared/schema";
+import { jobPostingSchema, NOT_A_JOB_TITLE, type JobPosting } from "@shared/schema";
 import type { ExtractMode } from "@/components/job/JobInput";
 
 // The route returns errors as JSON ({ error }); useObject surfaces a non-2xx
@@ -37,11 +37,26 @@ export function useJobExtraction(
         onExtractedRef.current = onExtracted;
     }, [onExtracted]);
 
+    // useObject's `error` only covers a failed request. A stream that broke off
+    // mid-way, or ended in an object that fails the schema, reaches onFinish
+    // with no object instead, and would otherwise leave a half-filled card
+    // with no explanation. Text the model judged not to be a posting ends here
+    // too, rather than being saved and given a cover letter.
+    const [finishError, setFinishError] = useState<string | null>(null);
+
     const { submit, object, isLoading, error, clear } = useObject({
         api: "/api/extract",
         schema: jobPostingSchema,
         onFinish({ object }) {
-            if (!object) return;
+            if (!object) {
+                setFinishError("Uthentingen stoppet før den var ferdig. Prøv igjen.");
+                return;
+            }
+            if (object.title === NOT_A_JOB_TITLE) {
+                clear();
+                setFinishError("Det ser ikke ut som en stillingsannonse.");
+                return;
+            }
             onExtractedRef.current(object, pendingUrlRef.current ?? undefined);
         },
     });
@@ -51,6 +66,7 @@ export function useJobExtraction(
             const url = mode === "url" ? value : null;
             pendingUrlRef.current = url;
             setPendingUrl(url);
+            setFinishError(null);
             submit({ mode, value });
         },
         [submit],
@@ -59,6 +75,7 @@ export function useJobExtraction(
     const reset = useCallback(() => {
         pendingUrlRef.current = null;
         setPendingUrl(null);
+        setFinishError(null);
         clear();
     }, [clear]);
 
@@ -67,7 +84,7 @@ export function useJobExtraction(
         object,
         isLoading,
         /** A user-facing error message, or null. */
-        message: errorMessage(error),
+        message: finishError ?? errorMessage(error),
         pendingUrl,
         start,
         reset,

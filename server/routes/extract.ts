@@ -1,7 +1,7 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { streamObject } from "ai";
 import { Hono } from "hono";
-import { jobPostingSchema } from "../../shared/schema.js";
+import { jobPostingSchema, NOT_A_JOB_TITLE } from "../../shared/schema.js";
 import { fetchReadableText, ScrapeError } from "../lib/scrape.js";
 
 type ExtractBody = { mode?: "url" | "text"; value?: string };
@@ -24,7 +24,7 @@ const SYSTEM =
     "(bokmål). Keep the posting's own wording for titles and skill names " +
     "rather than translating them. If the posting's language is unclear, " +
     "use Norwegian. If the text is clearly not a job posting, return the " +
-    "title 'Ikke en stillingsannonse' with empty arrays.";
+    `title '${NOT_A_JOB_TITLE}' with empty arrays.`;
 
 export const extractRoute = new Hono();
 
@@ -70,6 +70,7 @@ extractRoute.post("/", async (c) => {
         schema: jobPostingSchema,
         system: SYSTEM,
         prompt: `--- JOB POSTING ---\n${text.slice(0, MAX_TEXT_CHARS)}\n--- END ---`,
+        maxOutputTokens: 2_000,
     });
 
     // toTextStreamResponse pairs with useObject on the client. Hono passes a

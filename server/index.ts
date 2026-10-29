@@ -3,8 +3,7 @@
 // this file is never loaded.
 //
 // Loads ANTHROPIC_API_KEY (and the optional SCRAPE_* settings) from .env.
-// Next.js used to do this implicitly; a plain Node process does not. Vercel
-// injects its own environment, so the function entrypoint skips this.
+// Vercel injects its own environment, so the function entrypoint skips this.
 import "dotenv/config";
 
 import { serve } from "@hono/node-server";
