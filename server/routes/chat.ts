@@ -1,13 +1,34 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { Hono } from "hono";
-import type { JobPosting } from "../../shared/schema.js";
+import { jobPostingSchema, type JobPosting } from "../../shared/schema.js";
 
-type ChatBody = { messages?: UIMessage[]; jobData?: JobPosting };
+type ChatBody = { messages?: unknown; jobData?: unknown };
 
 // The route is public, so bound how much one request can make us spend.
 // 100 turns is far past any real cover-letter conversation.
 const MAX_MESSAGES = 100;
+// A real extracted posting is a few KB of JSON.
+const MAX_JOB_DATA_CHARS = 20_000;
+
+// The app only ever sends plain text turns. Anything else is refused: a file
+// part with a URL is fetched by Anthropic (images, PDFs — billed per token)
+// or downloaded by this function (any other type, up to 2 GB), and a system
+// message would let the caller rewrite the instructions.
+// `step-start` is a marker the SDK adds to every assistant reply.
+function isTextTurn(message: unknown): message is UIMessage {
+    if (typeof message !== "object" || message === null) return false;
+    const { role, parts } = message as { role?: unknown; parts?: unknown };
+    return (
+        (role === "user" || role === "assistant") &&
+        Array.isArray(parts) &&
+        parts.every(
+            (part) =>
+                (part?.type === "text" && typeof part.text === "string") ||
+                part?.type === "step-start",
+        )
+    );
+}
 
 function systemPrompt(jobData: JobPosting): string {
     return (
@@ -46,17 +67,23 @@ chatRoute.post("/", async (c) => {
     } catch {
         return c.json({ error: "Ugyldig forespørsel." }, 400);
     }
-    const { messages, jobData } = body;
+    const { messages } = body;
     if (!Array.isArray(messages) || messages.length === 0) {
         return c.json({ error: "Ugyldig forespørsel." }, 400);
     }
     if (messages.length > MAX_MESSAGES) {
         return c.json({ error: "Samtalen er for lang. Start en ny." }, 413);
     }
-    // The app always sends the job; a request without one isn't from it.
-    if (!jobData) {
+    if (!messages.every(isTextTurn)) {
         return c.json({ error: "Ugyldig forespørsel." }, 400);
     }
+    // The app always sends the job, and it goes into the system prompt, so
+    // it must be a real posting of a sane size — not free-form instructions.
+    const job = jobPostingSchema.safeParse(body.jobData);
+    if (!job.success || JSON.stringify(job.data).length > MAX_JOB_DATA_CHARS) {
+        return c.json({ error: "Ugyldig forespørsel." }, 400);
+    }
+    const jobData: JobPosting = job.data;
 
     const result = streamText({
         // Reads ANTHROPIC_API_KEY from .env. Swap to anthropic("claude-opus-5")
