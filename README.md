@@ -155,6 +155,14 @@ default — the request would be cut off mid-stream. The rewrite sends every
 path *except* `/api/` to `index.html`, without which a hard reload on a deep
 link 404s.
 
+The API also needs a **Vercel Firewall rate-limit rule**, which lives in the
+project dashboard, not in this repo: request path starts with `/api/`, fixed
+window of 60 s, 30 requests per IP, answered with 429 (Too Many Requests).
+Every API call spends Claude credit, and nothing in the code limits how many
+requests arrive, so a new Vercel project deployed without this rule is an open
+proxy to your key. Set a monthly spend limit on the Anthropic key as well —
+the only cap against someone rotating IP addresses.
+
 `main` is protected by a GitHub ruleset requiring the [CI workflow](.github/workflows/ci.yml)
 to pass before merging, so only a build that has passed lint, type checks,
 and tests can reach `main`.
