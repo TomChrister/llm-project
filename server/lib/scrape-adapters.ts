@@ -11,7 +11,7 @@
 // text, and append it to ADAPTERS.
 import { get, htmlToText, isObject, joinFields, plainText } from "./scrape-text.js";
 
-export type AtsAdapter = {
+type AtsAdapter = {
     /** Identifies the adapter in logs. */
     name: string;
     /** The JSON API URL for this posting, or null if the URL isn't ours. */
@@ -47,13 +47,18 @@ const greenhouse: AtsAdapter = {
     name: "greenhouse",
     resolve(url) {
         if (!/(^|\.)greenhouse\.io$/.test(url.hostname)) return null;
+        const api = (board: string, id: string) =>
+            `https://boards-api.greenhouse.io/v1/boards/${board}/jobs/${id}`;
+        // The embed link carries both in the query string:
+        // boards.greenhouse.io/embed/job_app?for=acme&token=123
+        if (url.pathname === "/embed/job_app") {
+            const board = url.searchParams.get("for");
+            const id = url.searchParams.get("token");
+            return board && id && /^\d+$/.test(id) ? api(encodeURIComponent(board), id) : null;
+        }
         // boards.greenhouse.io/acme/jobs/123 and the newer job-boards host.
-        const match = /^\/(?:embed\/job_app\?token=)?([^/]+)\/jobs\/(\d+)/.exec(
-            url.pathname,
-        );
-        if (!match) return null;
-        const [, board, id] = match;
-        return `https://boards-api.greenhouse.io/v1/boards/${board}/jobs/${id}`;
+        const match = /^\/([^/]+)\/jobs\/(\d+)/.exec(url.pathname);
+        return match ? api(match[1], match[2]) : null;
     },
     parse(payload) {
         if (!isObject(payload)) return null;
@@ -113,7 +118,7 @@ const lever: AtsAdapter = {
     },
 };
 
-export const ADAPTERS: readonly AtsAdapter[] = [bamboohr, greenhouse, lever];
+const ADAPTERS: readonly AtsAdapter[] = [bamboohr, greenhouse, lever];
 
 /** The first adapter that recognises this URL, with its resolved API URL. */
 export function matchAdapter(

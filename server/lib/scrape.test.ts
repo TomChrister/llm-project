@@ -62,6 +62,11 @@ describe("matchAdapter", () => {
             "https://boards-api.greenhouse.io/v1/boards/anthropic/jobs/4461450008",
         ],
         [
+            "https://boards.greenhouse.io/embed/job_app?for=anthropic&token=4461450008",
+            "greenhouse",
+            "https://boards-api.greenhouse.io/v1/boards/anthropic/jobs/4461450008",
+        ],
+        [
             "https://jobs.lever.co/leverdemo/33538a2f-d27d-4a96-8f05-fa4b0e4d940e",
             "lever",
             "https://api.lever.co/v0/postings/leverdemo/33538a2f-d27d-4a96-8f05-fa4b0e4d940e",
@@ -215,6 +220,86 @@ describe("fetchReadableText", () => {
             status: 400,
         });
         expect(spy).not.toHaveBeenCalled();
+    });
+
+    it.each(["http://[::1]/", "http://[::ffff:127.0.0.1]/", "http://[fd00::1]/"])(
+        "rejects the private IPv6 address %s",
+        async (url) => {
+            const spy = stubFetch(() => html("<p>nope</p>"));
+            await expect(fetchReadableText(url)).rejects.toMatchObject({ status: 400 });
+            expect(spy).not.toHaveBeenCalled();
+        },
+    );
+
+    it("refuses a redirect to a private address", async () => {
+        const spy = stubFetch(
+            () => new Response(null, { status: 302, headers: { location: "http://127.0.0.1:3001/" } }),
+        );
+        await expect(fetchReadableText("https://example.com/jobb")).rejects.toMatchObject({
+            status: 400,
+        });
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it("follows a redirect to a public page", async () => {
+        stubFetch((url) =>
+            url === "https://example.com/jobb"
+                ? new Response(null, { status: 301, headers: { location: "/ny-jobb" } })
+                : html(htmlPage("", `<article><p>${BODY}</p></article>`)),
+        );
+        expect(await fetchReadableText("https://example.com/jobb")).toContain("dyktig utvikler");
+    });
+
+    it("does not send the render token to another host after a redirect", async () => {
+        vi.stubEnv("SCRAPE_RENDER_ENDPOINT", "https://render.test/?url={url}");
+        vi.stubEnv("SCRAPE_RENDER_TOKEN", "secret");
+        const shell = htmlPage(
+            "",
+            '<div id="root"></div><script src="a.js"></script><script src="b.js"></script><script src="c.js"></script>',
+        );
+        const spy = vi.fn<typeof fetch>((input) => {
+            const url = String(input);
+            if (url.startsWith("https://render.test/")) {
+                return Promise.resolve(
+                    new Response(null, { status: 302, headers: { location: "https://cdn.test/out" } }),
+                );
+            }
+            if (url === "https://cdn.test/out") {
+                return Promise.resolve(
+                    new Response(BODY, { headers: { "content-type": "text/plain" } }),
+                );
+            }
+            return Promise.resolve(html(shell));
+        });
+        vi.stubGlobal("fetch", spy);
+
+        await fetchReadableText("https://example.com/jobb");
+
+        const auth = (url: string) => {
+            const call = spy.mock.calls.find(([input]) => String(input).startsWith(url));
+            return (call?.[1]?.headers as Record<string, string>)?.Authorization;
+        };
+        expect(auth("https://render.test/")).toBe("Bearer secret");
+        expect(auth("https://cdn.test/")).toBeUndefined();
+    });
+
+    it("stops reading a page that passes the size cap", async () => {
+        // No content-length and no end, so only the running byte count can stop it.
+        let pulled = 0;
+        const endless = new ReadableStream<Uint8Array>({
+            pull(controller) {
+                pulled++;
+                controller.enqueue(new Uint8Array(1_000_000));
+            },
+        });
+        stubFetch(
+            () => new Response(endless, { headers: { "content-type": "text/html" } }),
+        );
+
+        await expect(fetchReadableText("https://example.com/jobb")).rejects.toMatchObject({
+            status: 413,
+        });
+        expect(pulled).toBeLessThan(10);
     });
 
     it("assumes https for an address pasted without a scheme", async () => {

@@ -77,25 +77,30 @@ the URL to a third party.
 ## Project structure
 
 ```
-src/
-  app/
-    api/extract/route.ts   # URL fetch + streamObject extraction
-    api/chat/route.ts      # streamText chat, job data as persistent system context
-    page.tsx                # orchestrates input/extraction/chat + history state
+src/                          # React client (Vite), imported as @/
+  App.tsx                     # orchestrates input/extraction/chat + history state
+  hooks/useJobExtraction.ts   # one streaming extraction (useObject) and its errors
   components/
-    JobInput.tsx             # URL/text mode toggle + example postings
-    JobDetails.tsx           # extracted job data as a card with skill tags
-    ApplicationChat.tsx      # cover-letter chat with quick actions
-    Sidebar.tsx / Hero.tsx   # job history sidebar + landing hero
-    ui/                      # design-system primitives (Button, Chip, Card, ...)
+    job/                      # JobInput (URL/text + examples), JobDetails (the card)
+    chat/ApplicationChat.tsx  # cover-letter chat with quick actions
+    layout/                   # Sidebar (history) and Hero
+    ui/                       # design-system primitives (Button, Chip, Card, ...)
   lib/
-    schema.ts                # shared Zod schema for the extracted job posting
-    scrape.ts                 # URL fetch orchestration + SSRF guarding
-    scrape-adapters.ts        # public JSON APIs of known ATS platforms
-    scrape-extractors.ts      # JSON-LD / Readability / hydration-payload extractors
-    scrape-text.ts            # HTML-to-text and field-formatting helpers
     storage.ts                # localStorage-backed job history (useSyncExternalStore)
     examples.ts               # fictional example postings for the input screen
+server/                       # Hono API: owns the API key and all outside fetches
+  app.ts                      # the app: body limit + routes
+  index.ts                    # Node entrypoint for `npm run dev`
+  routes/extract.ts           # URL fetch + streamObject extraction
+  routes/chat.ts              # streamText chat, job data as persistent system context
+  lib/scrape.ts               # URL fetch orchestration + SSRF guarding
+  lib/scrape-adapters.ts      # public JSON APIs of known ATS platforms
+  lib/scrape-extractors.ts    # JSON-LD / Readability / hydration-payload extractors
+  lib/scrape-text.ts          # HTML-to-text and field-formatting helpers
+shared/                       # imported by both sides as @shared/
+  schema.ts                   # Zod schema for the extracted job posting
+  url.ts                      # normalizes a pasted URL
+api/[...route].ts             # Vercel function wrapping server/app.ts
 ```
 
 ## Reading a job URL

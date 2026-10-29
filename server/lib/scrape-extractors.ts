@@ -8,16 +8,11 @@
 import { Readability } from "@mozilla/readability";
 import { parseHTML } from "linkedom";
 import {
-    MIN_TEXT_CHARS,
     isObject,
     joinFields,
     normalizeWhitespace,
+    sufficient,
 } from "./scrape-text.js";
-
-function sufficient(text: string | null | undefined): string | null {
-    const trimmed = text?.trim();
-    return trimmed && trimmed.length >= MIN_TEXT_CHARS ? trimmed : null;
-}
 
 // --- 1. schema.org JobPosting in JSON-LD -----------------------------------
 //

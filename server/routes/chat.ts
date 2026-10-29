@@ -3,12 +3,13 @@ import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { Hono } from "hono";
 import type { JobPosting } from "../../shared/schema.js";
 
-type ChatBody = { messages: UIMessage[]; jobData?: JobPosting };
+type ChatBody = { messages?: UIMessage[]; jobData?: JobPosting };
 
-function systemPrompt(jobData: JobPosting | undefined): string {
-    if (!jobData) {
-        return "Du er en hjelpsom jobbsøknadsassistent. Svar alltid på norsk (bokmål).";
-    }
+// The route is public, so bound how much one request can make us spend.
+// 100 turns is far past any real cover-letter conversation.
+const MAX_MESSAGES = 100;
+
+function systemPrompt(jobData: JobPosting): string {
     return (
         `You are a job application assistant. You help the user write and refine ` +
         `a cover letter and application for the specific job below.\n\n` +
@@ -39,7 +40,23 @@ export const chatRoute = new Hono();
 // so the extracted posting stays in the system context for the whole
 // conversation — not just the first turn.
 chatRoute.post("/", async (c) => {
-    const { messages, jobData }: ChatBody = await c.req.json();
+    let body: ChatBody;
+    try {
+        body = await c.req.json();
+    } catch {
+        return c.json({ error: "Ugyldig forespørsel." }, 400);
+    }
+    const { messages, jobData } = body;
+    if (!Array.isArray(messages) || messages.length === 0) {
+        return c.json({ error: "Ugyldig forespørsel." }, 400);
+    }
+    if (messages.length > MAX_MESSAGES) {
+        return c.json({ error: "Samtalen er for lang. Start en ny." }, 413);
+    }
+    // The app always sends the job; a request without one isn't from it.
+    if (!jobData) {
+        return c.json({ error: "Ugyldig forespørsel." }, 400);
+    }
 
     const result = streamText({
         // Reads ANTHROPIC_API_KEY from .env. Swap to anthropic("claude-opus-5")
@@ -47,6 +64,7 @@ chatRoute.post("/", async (c) => {
         model: anthropic("claude-sonnet-5"),
         system: systemPrompt(jobData),
         messages: await convertToModelMessages(messages),
+        maxOutputTokens: 2_000,
     });
 
     return result.toUIMessageStreamResponse();

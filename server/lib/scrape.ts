@@ -19,14 +19,12 @@
 // page needs JavaScript and point the user at the paste-the-text path, which
 // always works.
 //
-// Uses linkedom rather than jsdom for the DOM Readability needs: jsdom's
-// dependency tree (html-encoding-sniffer, whatwg-url) pulls in an ESM-only
-// package that breaks when Next.js externalizes jsdom for the serverless
-// bundle on Vercel (raw require() of an ESM file). linkedom has none of that
-// and is small enough to just bundle normally.
+// Uses linkedom rather than jsdom for the DOM Readability needs: it is a
+// fraction of jsdom's size and dependency tree, which matters for a
+// serverless function that is bundled and cold-started on demand.
 import { matchAdapter } from "./scrape-adapters.js";
 import { extractFromHtml, looksClientRendered } from "./scrape-extractors.js";
-import { MIN_TEXT_CHARS, normalizeWhitespace } from "./scrape-text.js";
+import { normalizeWhitespace, sufficient } from "./scrape-text.js";
 import { normalizeUrlInput } from "../../shared/url.js";
 
 // Thrown for every expected failure so the route can map it to a friendly
@@ -46,6 +44,7 @@ const FETCH_TIMEOUT_MS = 10_000;
 // plain fetch. Still well inside the route's maxDuration of 60s.
 const RENDER_TIMEOUT_MS = 25_000;
 const MAX_HTML_BYTES = 3_000_000; // don't try to parse enormous pages
+const MAX_REDIRECTS = 5;
 
 // A plausible browser UA. Several ATS platforms sit behind a WAF that serves a
 // challenge page to anything self-identifying as a bot, which we would then
@@ -55,8 +54,9 @@ const USER_AGENT =
     "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 // Basic SSRF guard: this endpoint fetches a user-supplied URL server-side, so
-// refuse obvious internal/loopback targets. Not exhaustive (DNS can still point
-// a public host at a private IP), but it blocks the easy cases for a demo.
+// refuse obvious internal/loopback targets, on the first URL and on every
+// redirect. Not exhaustive (DNS can still point a public host at a private
+// IP), but it blocks the easy cases for a demo.
 function assertPublicHttpUrl(raw: string): URL {
     let url: URL;
     try {
@@ -72,13 +72,20 @@ function assertPublicHttpUrl(raw: string): URL {
         throw new ScrapeError("Bare http:// og https://-URL-er støttes.", 400);
     }
 
-    const host = url.hostname.toLowerCase();
+    // IPv6 hostnames keep their brackets (`[::1]`); strip them to compare.
+    const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, "");
     const blocked =
         host === "localhost" ||
         host.endsWith(".local") ||
         host.endsWith(".internal") ||
-        host === "0.0.0.0" ||
+        /^0\./.test(host) ||
+        // IPv6 loopback/unspecified, unique-local (fc00::/7), link-local
+        // (fe80::/10), and IPv4-mapped (::ffff:7f00:1 is 127.0.0.1).
         host === "::1" ||
+        host === "::" ||
+        /^f[cd][0-9a-f]{0,2}:/.test(host) ||
+        /^fe[89ab][0-9a-f]?:/.test(host) ||
+        host.startsWith("::ffff:") ||
         /^127\./.test(host) ||
         /^10\./.test(host) ||
         /^192\.168\./.test(host) ||
@@ -99,21 +106,43 @@ async function fetchBody(
     timeoutMs: number,
     headers: Record<string, string> = {},
 ): Promise<FetchedBody> {
+    // Redirects are followed by hand so every hop goes through the SSRF
+    // guard — with redirect: "follow", a public page could 302 us to
+    // 127.0.0.1 after the first check had already passed.
+    const signal = AbortSignal.timeout(timeoutMs);
+    const origin = new URL(target).origin;
+    let current = target;
     let res: Response;
-    try {
-        res = await fetch(target, {
-            redirect: "follow",
-            signal: AbortSignal.timeout(timeoutMs),
-            headers: { "User-Agent": USER_AGENT, Accept: accept, ...headers },
-        });
-    } catch (err) {
-        const timedOut = err instanceof Error && err.name === "TimeoutError";
-        throw new ScrapeError(
-            timedOut
-                ? "Siden brukte for lang tid på å svare."
-                : "Klarte ikke å nå den siden.",
-            502,
-        );
+    for (let hop = 0; ; hop++) {
+        // The caller's headers (the renderer's bearer token) are only for the
+        // site they were meant for — fetch's own redirect handling drops them
+        // on a cross-origin hop, so this loop must too.
+        const sameOrigin = new URL(current).origin === origin;
+        try {
+            res = await fetch(current, {
+                redirect: "manual",
+                signal,
+                headers: {
+                    "User-Agent": USER_AGENT,
+                    Accept: accept,
+                    ...(sameOrigin ? headers : {}),
+                },
+            });
+        } catch (err) {
+            const timedOut = err instanceof Error && err.name === "TimeoutError";
+            throw new ScrapeError(
+                timedOut
+                    ? "Siden brukte for lang tid på å svare."
+                    : "Klarte ikke å nå den siden.",
+                502,
+            );
+        }
+        const location = res.headers.get("location");
+        if (res.status < 300 || res.status >= 400 || !location) break;
+        if (hop >= MAX_REDIRECTS) {
+            throw new ScrapeError("Siden videresendte for mange ganger.", 502);
+        }
+        current = assertPublicHttpUrl(new URL(location, current).href).href;
     }
 
     if (!res.ok) {
@@ -123,20 +152,41 @@ async function fetchBody(
         );
     }
 
-    const body = await res.text();
-    if (body.length > MAX_HTML_BYTES) {
-        throw new ScrapeError("Siden er for stor til å behandles.", 413);
-    }
-
     return {
-        body,
+        body: await readCapped(res),
         contentType: res.headers.get("content-type") ?? "",
-        url: res.url || target,
+        url: current,
     };
 }
 
-function sufficient(text: string | null): string | null {
-    return text && text.length >= MIN_TEXT_CHARS ? text : null;
+/**
+ * The body as text, refusing it once it passes MAX_HTML_BYTES. Read in chunks
+ * and stopped early, because res.text() would buffer a never-ending response
+ * whole before we got to look at its size.
+ */
+async function readCapped(res: Response): Promise<string> {
+    const tooBig = () => new ScrapeError("Siden er for stor til å behandles.", 413);
+    if (Number(res.headers.get("content-length")) > MAX_HTML_BYTES) {
+        await res.body?.cancel();
+        throw tooBig();
+    }
+    if (!res.body) return "";
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let size = 0;
+    let text = "";
+    for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.byteLength;
+        if (size > MAX_HTML_BYTES) {
+            await reader.cancel();
+            throw tooBig();
+        }
+        text += decoder.decode(value, { stream: true });
+    }
+    return text + decoder.decode();
 }
 
 /** Step 1: a known ATS board's JSON API. Never fatal — we can still scrape. */
