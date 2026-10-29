@@ -36,7 +36,8 @@ extractRoute.post("/", async (c) => {
         return c.json({ error: "Ugyldig forespørsel." }, 400);
     }
 
-    const value = body.value?.trim();
+    // The body comes from anyone, so check the type before calling .trim().
+    const value = typeof body.value === "string" ? body.value.trim() : "";
     if (!value) {
         return c.json(
             { error: "Lim inn en stillingsannonse-URL eller teksten først." },
