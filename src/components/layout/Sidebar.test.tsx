@@ -52,13 +52,15 @@ describe("Sidebar", () => {
             />,
         );
 
-        await user.click(screen.getByText("Frontend-utvikler"));
+        // A real button, so the keyboard can open it: focus it, press Enter.
+        screen.getByRole("button", { name: /Frontend-utvikler/ }).focus();
+        await user.keyboard("{Enter}");
 
         expect(onSelect).toHaveBeenCalledWith("1");
         expect(onClose).toHaveBeenCalled();
     });
 
-    it("deletes a job without triggering select (stopPropagation)", async () => {
+    it("deletes a job without triggering select", async () => {
         const user = userEvent.setup();
         const onSelect = vi.fn();
         const onDelete = vi.fn();

@@ -6,7 +6,8 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
-    globalIgnores(["dist/**", "node_modules/**"]),
+    // .claude/worktrees holds Claude Code's spare copies of the repo.
+    globalIgnores(["dist/**", "node_modules/**", ".claude/**"]),
     {
         files: ["**/*.{ts,tsx}"],
         extends: [
