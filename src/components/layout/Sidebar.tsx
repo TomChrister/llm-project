@@ -32,8 +32,8 @@ export function Sidebar({
             />
 
             <div
-                className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col gap-4 overflow-y-auto border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-xl transition-transform duration-200 md:static md:z-auto md:w-60 md:shrink-0 md:translate-x-0 md:overflow-visible md:bg-transparent md:py-6 md:pr-4 md:pl-0 md:shadow-none ${
-                    open ? "translate-x-0" : "-translate-x-full"
+                className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col gap-4 overflow-y-auto border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 transition-transform duration-200 md:static md:z-auto md:w-60 md:shrink-0 md:translate-x-0 md:overflow-visible md:bg-transparent md:py-6 md:pr-4 md:pl-0 md:shadow-none ${
+                    open ? "translate-x-0 shadow-xl" : "-translate-x-full"
                 }`}
             >
                 <div className="flex items-center justify-between gap-2 md:hidden">
@@ -61,11 +61,11 @@ export function Sidebar({
                     Ny uthenting
                 </Button>
                 <div className="flex flex-col gap-0.5">
-                    <div className="mb-2 px-2 text-xs tracking-[var(--tracking-wide)] text-[var(--text-tertiary)] uppercase">
+                    <div className="mb-2 px-3 text-xs font-medium tracking-[var(--tracking-wide)] text-[var(--text-secondary)] uppercase">
                         Historikk
                     </div>
                     {jobs.length === 0 && (
-                        <div className="px-2 text-sm text-[var(--text-tertiary)]">
+                        <div className="px-3 text-sm text-[var(--text-secondary)]">
                             Ingen lagrede stillinger ennå.
                         </div>
                     )}
@@ -79,18 +79,18 @@ export function Sidebar({
                                     onSelect(job.id);
                                     onClose();
                                 }}
-                                className={`flex cursor-pointer items-center justify-between gap-2 rounded-lg p-2 ${
+                                className={`flex cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 ${
                                     job.id === currentId
                                         ? "bg-[var(--bg-surface-hover)]"
                                         : "hover:bg-[var(--bg-surface-hover)]"
                                 }`}
                             >
                                 <div className="min-w-0">
-                                    <div className="truncate text-sm text-[var(--text-primary)]">
+                                    <div className="truncate text-sm font-medium text-[var(--text-primary)]">
                                         {job.jobData.title}
                                     </div>
                                     {job.jobData.company && (
-                                        <div className="truncate text-xs text-[var(--text-tertiary)]">
+                                        <div className="truncate text-xs text-[var(--text-secondary)]">
                                             {job.jobData.company}
                                         </div>
                                     )}

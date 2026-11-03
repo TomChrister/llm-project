@@ -14,7 +14,7 @@ export function Chip({
 
     return (
         <span
-            className={`inline-block rounded-md border px-3.5 py-1 text-[13px] ${toneClasses}`}
+            className={`inline-block rounded-full border px-4 py-2 text-sm leading-none ${toneClasses}`}
         >
             {children}
         </span>
@@ -25,10 +25,10 @@ export function MetaField({ label, value }: { label: string; value?: string }) {
     if (!value) return null;
     return (
         <div>
-            <div className="text-[11px] tracking-[var(--tracking-wide)] text-[var(--text-tertiary)] uppercase">
+            <div className="text-xs tracking-normal text-[var(--text-secondary)]">
                 {label}
             </div>
-            <div className="mt-0.5 text-sm text-[var(--text-primary)]">{value}</div>
+            <div className="mt-1 text-base font-medium text-[var(--text-primary)]">{value}</div>
         </div>
     );
 }

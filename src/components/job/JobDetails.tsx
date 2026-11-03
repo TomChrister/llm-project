@@ -23,7 +23,7 @@ function TagList({
     if (values.length === 0) return null;
     return (
         <div>
-            <h3 className="mb-2 text-sm font-medium text-[var(--text-secondary)]">
+            <h3 className="mb-3 text-base font-medium text-[var(--text-primary)]">
                 {label}
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -62,11 +62,11 @@ export function JobDetails({
     return (
         <Card>
             <header>
-                <h2 className="m-0 font-display text-xl font-medium text-[var(--text-primary)] italic">
+                <h2 className="m-0 text-[28px] leading-[1.1] font-medium tracking-[-0.025em] text-[var(--text-primary)]">
                     {job.title ?? "…"}
                 </h2>
                 {job.company && (
-                    <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                    <p className="mt-2 text-base text-[var(--text-secondary)]">
                         {job.company}
                     </p>
                 )}
@@ -76,7 +76,7 @@ export function JobDetails({
                         target="_blank"
                         rel="noopener noreferrer"
                         title={sourceUrl}
-                        className="mt-1 inline-block max-w-full truncate align-bottom text-sm text-[var(--text-tertiary)] underline decoration-[var(--border-default)] underline-offset-2 hover:text-[var(--accent-400)] hover:decoration-[var(--accent-400)]"
+                        className="mt-1 inline-block max-w-full truncate align-bottom text-sm text-[var(--text-tertiary)] underline decoration-[var(--border-default)] underline-offset-2 hover:text-black hover:decoration-black"
                     >
                         {displayUrl(sourceUrl)}
                     </a>
@@ -104,16 +104,16 @@ export function JobDetails({
 
             {responsibilities.length > 0 && (
                 <div>
-                    <h3 className="mb-2 text-sm font-medium text-[var(--text-secondary)]">
+                    <h3 className="mb-3 text-base font-medium text-[var(--text-primary)]">
                         Ansvarsområder
                     </h3>
-                    <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+                    <ul className="m-0 flex list-none flex-col gap-2 p-0">
                         {responsibilities.map((r, i) => (
                             <li
                                 key={i}
-                                className="flex gap-2 text-sm text-[var(--text-primary)]"
+                                className="flex gap-2 text-base leading-normal text-[var(--text-primary)]"
                             >
-                                <span className="mt-0.5 text-[var(--accent-500)]">•</span>
+                                <span className="text-black">•</span>
                                 <span>{r}</span>
                             </li>
                         ))}

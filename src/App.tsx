@@ -88,7 +88,7 @@ export function App() {
                     type="button"
                     onClick={() => setSidebarOpen(true)}
                     aria-label="Åpne meny"
-                    className="my-6 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] md:hidden"
+                    className="my-6 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-black text-black hover:bg-[var(--bg-surface-hover)] md:hidden"
                 >
                     <svg
                         viewBox="0 0 20 20"
@@ -105,7 +105,7 @@ export function App() {
                     <Hero />
                 ) : (
                     <div className="flex items-start justify-between gap-4 pt-6">
-                        <div>
+                        <div className="min-w-0 flex-1">
                             <Wordmark />
                             <p className="mt-2 text-[var(--text-secondary)]">
                                 Lim inn URL-en til en stillingsannonse eller teksten
@@ -120,7 +120,7 @@ export function App() {
 
                 {/* Input phase — hidden once a job has been extracted. */}
                 {!currentJob && (
-                    <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 shadow-[0_1px_3px_rgba(20,24,31,0.06),0_1px_2px_rgba(20,24,31,0.04)]">
+                    <div className="rounded-3xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
                         <JobInput
                             key={resetKey}
                             busy={extraction.isLoading}
@@ -136,7 +136,7 @@ export function App() {
 
                 {/* Live-streaming details during extraction. */}
                 {!currentJob && extraction.object && (
-                    <div className="mt-8">
+                    <div className="mt-10">
                         <JobDetails
                             job={extraction.object}
                             sourceUrl={extraction.pendingUrl ?? undefined}
@@ -146,7 +146,7 @@ export function App() {
 
                 {/* Chat phase — final details plus the application assistant. */}
                 {currentJob && (
-                    <div className="mt-8 space-y-8">
+                    <div className="mt-10 space-y-10">
                         <JobDetails
                             job={currentJob.jobData}
                             sourceUrl={currentJob.sourceUrl}

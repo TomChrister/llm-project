@@ -13,7 +13,7 @@ export function ChatBubble({
     return (
         <div className={isUser ? "text-right" : "text-left"}>
             <span
-                className={`inline-block max-w-full rounded-lg px-3 py-2 text-left text-sm whitespace-pre-wrap ${
+                className={`inline-block max-w-full rounded-2xl px-4 py-3 text-left text-base leading-normal whitespace-pre-wrap ${
                     isUser
                         ? "bg-[var(--bubble-user-bg)] text-[var(--bubble-user-text)]"
                         : "bg-[var(--bubble-assistant-bg)] text-[var(--bubble-assistant-text)]"
