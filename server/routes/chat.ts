@@ -15,7 +15,10 @@ const MAX_JOB_DATA_CHARS = 20_000;
 // part with a URL is fetched by Anthropic (images, PDFs — billed per token)
 // or downloaded by this function (any other type, up to 2 GB), and a system
 // message would let the caller rewrite the instructions.
-// `step-start` is a marker the SDK adds to every assistant reply.
+// `step-start` is a marker the SDK adds to every assistant reply, and
+// `reasoning` is the model thinking before it answers; both come back with
+// the history. Reasoning is accepted but dropped before the model call, so a
+// caller can't plant fake "thoughts" in it.
 function isTextTurn(message: unknown): message is UIMessage {
     if (typeof message !== "object" || message === null) return false;
     const { role, parts } = message as { role?: unknown; parts?: unknown };
@@ -25,7 +28,8 @@ function isTextTurn(message: unknown): message is UIMessage {
         parts.every(
             (part) =>
                 (part?.type === "text" && typeof part.text === "string") ||
-                part?.type === "step-start",
+                part?.type === "step-start" ||
+                part?.type === "reasoning",
         )
     );
 }
@@ -90,9 +94,16 @@ chatRoute.post("/", async (c) => {
         // for Anthropic's most capable model at higher cost/latency.
         model: anthropic("claude-sonnet-5"),
         system: systemPrompt(jobData),
-        messages: await convertToModelMessages(messages),
+        messages: await convertToModelMessages(
+            messages.map((m) => ({
+                ...m,
+                parts: m.parts.filter((part) => part.type !== "reasoning"),
+            })),
+        ),
         maxOutputTokens: 2_000,
     });
 
-    return result.toUIMessageStreamResponse();
+    // The UI never shows the model's thinking, so don't stream it to the
+    // browser to be stored and sent back every turn.
+    return result.toUIMessageStreamResponse({ sendReasoning: false });
 });
