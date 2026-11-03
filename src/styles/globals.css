@@ -26,14 +26,16 @@
   --bg-page: var(--mid-abyss);
   --bg-surface: #082d31;
   --bg-surface-hover: rgba(255, 255, 255, 0.07);
-  --bg-input: rgba(255, 255, 255, 0.04);
+  /* Inputs stay white paper on the dark canvas, with dark ink inside. */
+  --bg-input: #ffffff;
+  --text-input: #14151c;
+  --text-input-placeholder: #666666;
   --bg-accent: var(--voltage-lime);
   --bg-accent-hover: var(--voltage-lime-hover);
 
   --text-primary: #ffffff;
   --text-secondary: #a3b5b7;
   --text-tertiary: #7d9496;
-  --text-placeholder: #7d9496;
   --text-on-accent: #000000;
   --text-danger: #ff8a7a;
 

@@ -27,13 +27,15 @@ function auroraBackground(): string {
 }
 
 // The aurora sits behind the existing hero copy only; it is the one place the
-// gradient is used.
+// gradient is used. The hero deliberately doesn't form its own stacking
+// context, so the glow's negative z-index drops it behind the input card
+// below instead of tinting it.
 export function Hero() {
     // Rolled once per mount, so it doesn't reshuffle on re-renders.
     const [background] = useState(auroraBackground);
 
     return (
-        <div className="relative isolate flex flex-col items-center gap-4 px-4 pt-16 pb-16 text-center">
+        <div className="relative flex flex-col items-center gap-4 px-4 pt-16 pb-16 text-center">
             <div
                 aria-hidden="true"
                 style={{ backgroundImage: background }}
