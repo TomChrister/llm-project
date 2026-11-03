@@ -1,74 +1,62 @@
 @import "tailwindcss";
 
-/* Registers the font-sans / font-display utilities from the Claude Design
-   tokens (Archivo / italic Newsreader). The families themselves are
-   self-hosted via @fontsource and imported in main.tsx. */
+/* Inter stands in for the reference design's NoiGrotesk (UI and body), and
+   expanded heavy Archivo for its SansPlomb display face. Both are
+   self-hosted variable fonts imported in main.tsx. */
 @theme inline {
-  --font-sans: "Archivo", ui-sans-serif, -apple-system, "Segoe UI", Arial,
+  --font-sans: "Inter Variable", ui-sans-serif, -apple-system, "Segoe UI",
+    Arial, sans-serif;
+  --font-display: "Archivo Variable", "Inter Variable", ui-sans-serif,
     sans-serif;
-  --font-display: "Newsreader", Georgia, "Times New Roman", serif;
 }
 
-/* Design tokens imported from the "Job Application Assistant" Claude Design
-   project (job-assistant-design-system). Spacing and radius aren't
-   redeclared here — the design's scale (4/8/12/16/20/24/32/40/48/64/80,
-   6/8/12px radii) maps 1:1 onto Tailwind's defaults, so components use
-   Tailwind's padding, gap, and rounded-corner utilities directly instead
-   of var() references. */
+/* The reference's "neon highlighter" system, flipped to dark: the Mid Abyss
+   teal-black is the canvas, text is white, and Voltage Lime stays the one
+   accent, kept for primary actions and the active state. Spacing sits on an
+   8px grid that maps onto Tailwind's defaults; radii are pillow-soft (24px)
+   on cards and inputs, compact (8px) on buttons, and full on tags. */
 :root {
-  --gray-950: #f7f8fa;
-  --gray-900: #eef0f3;
-  --gray-800: #e3e6eb;
-  --gray-700: #dfe3ea;
-  --gray-500: #8b93a1;
-  --gray-400: #9aa1ad;
-  --gray-300: #4b5563;
-  --gray-100: #14181f;
+  color-scheme: dark;
 
-  --accent-700: #1f3170;
-  --accent-600: #28409e;
-  --accent-500: #3452c4;
-  --accent-400: #6a80d6;
+  --voltage-lime: #d3fb52;
+  --voltage-lime-hover: #e0ff7a;
+  --cyan-spark: #7af3ff;
+  --mid-abyss: #052326;
 
-  --red-500: #dc2626;
-
-  --accent-a15: rgba(52, 82, 196, 0.1);
-  --accent-a30: rgba(52, 82, 196, 0.22);
-  --gray-a15: rgba(139, 147, 161, 0.14);
-  --gray-a30: rgba(139, 147, 161, 0.28);
-
-  --bg-page: var(--gray-950);
-  --bg-surface: #ffffff;
-  --bg-surface-hover: rgba(20, 24, 31, 0.05);
+  --bg-page: var(--mid-abyss);
+  --bg-surface: #082d31;
+  --bg-surface-hover: rgba(255, 255, 255, 0.07);
+  /* Inputs stay white paper on the dark canvas, with dark ink inside. */
   --bg-input: #ffffff;
-  /* One step darker than the palette's mid accent, for a bit more weight on
-     the primary button and the active segmented-control tab. */
-  --bg-accent: var(--accent-600);
-  --bg-accent-hover: var(--accent-700);
+  --text-input: #14151c;
+  --text-input-placeholder: #666666;
+  --bg-accent: var(--voltage-lime);
+  --bg-accent-hover: var(--voltage-lime-hover);
 
-  --text-primary: var(--gray-100);
-  --text-secondary: var(--gray-300);
-  --text-tertiary: var(--gray-500);
-  --text-placeholder: var(--gray-400);
-  --text-on-accent: #ffffff;
-  --text-danger: var(--red-500);
+  --text-primary: #ffffff;
+  --text-secondary: #a3b5b7;
+  --text-tertiary: #7d9496;
+  --text-on-accent: #000000;
+  --text-danger: #ff8a7a;
 
-  --border-default: var(--gray-700);
-  --border-hover: var(--accent-500);
-  --border-subtle: var(--gray-800);
+  --border-default: rgba(255, 255, 255, 0.12);
+  --border-hover: rgba(255, 255, 255, 0.6);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.85);
 
-  --chip-required-bg: var(--accent-a15);
-  --chip-required-text: var(--accent-600);
-  --chip-required-border: var(--accent-a30);
-  --chip-nice-bg: var(--gray-a15);
-  --chip-nice-text: var(--gray-300);
-  --chip-nice-border: var(--gray-a30);
+  --chip-required-bg: transparent;
+  --chip-required-text: #ffffff;
+  --chip-required-border: rgba(255, 255, 255, 0.85);
+  --chip-nice-bg: transparent;
+  --chip-nice-text: var(--text-secondary);
+  --chip-nice-border: rgba(255, 255, 255, 0.18);
 
-  --bubble-user-bg: var(--accent-500);
-  --bubble-user-text: #ffffff;
-  --bubble-assistant-bg: var(--gray-900);
-  --bubble-assistant-text: var(--gray-100);
+  --bubble-user-bg: #ffffff;
+  --bubble-user-text: #14151c;
+  --bubble-assistant-bg: rgba(255, 255, 255, 0.07);
+  --bubble-assistant-text: #ffffff;
 
+  --tracking-tight: -0.015em;
   --tracking-wide: 0.05em;
 }
 
@@ -90,10 +78,14 @@ body {
   background: var(--bg-page);
   color: var(--text-primary);
   font-family: var(--font-sans);
+  letter-spacing: var(--tracking-tight);
+  /* The hero glow bleeds past the column; clip it rather than scroll. */
+  overflow-x: clip;
 }
 
 ::selection {
-  background: var(--accent-a30);
+  background: var(--voltage-lime);
+  color: #000000;
 }
 
 /* Blinking caret shown at the end of a streaming assistant message */

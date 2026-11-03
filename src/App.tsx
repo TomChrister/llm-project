@@ -5,23 +5,25 @@ import { JobDetails } from "@/components/job/JobDetails";
 import { ApplicationChat } from "@/components/chat/ApplicationChat";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Hero } from "@/components/layout/Hero";
-import { Wordmark } from "@/components/ui/Wordmark";
-import { Button } from "@/components/ui/Button";
+import { Header } from "@/components/layout/Header";
 import { useJobExtraction } from "@/hooks/useJobExtraction";
+import { useView, type View } from "@/hooks/useView";
 import { useSavedJobs, type SavedJob } from "@/lib/storage";
 import type { JobPosting } from "@shared/schema";
 
 export function App() {
-    // Every finished extraction is saved here (with its chat thread) so the
-    // sidebar can list history and switch between past jobs. Backed by
-    // localStorage via useSyncExternalStore.
+    // Every finished extraction is saved here (with its chat thread) and
+    // listed on the letters page. Backed by localStorage via
+    // useSyncExternalStore.
     const [savedJobs, setSavedJobs] = useSavedJobs();
-    const [currentId, setCurrentId] = useState<string | null>(null);
-    // Bumped on "New extraction" to remount JobInput with a clean slate.
+    const [view, navigate] = useView();
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+    // Bumped when returning home to remount JobInput with a clean slate.
     const [resetKey, setResetKey] = useState(0);
-    // Sidebar renders as a slide-in drawer below the md breakpoint.
+    // The letters list renders as a slide-in drawer below the md breakpoint.
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+    // A finished extraction becomes a new letter: save it and open it.
     const handleExtracted = useCallback(
         (jobData: JobPosting, sourceUrl?: string) => {
             const entry: SavedJob = {
@@ -32,28 +34,34 @@ export function App() {
                 createdAt: Date.now(),
             };
             setSavedJobs((prev) => [...prev, entry]);
-            setCurrentId(entry.id);
+            setSelectedId(entry.id);
+            navigate("letters");
         },
-        [setSavedJobs],
+        [setSavedJobs, navigate],
     );
 
     const extraction = useJobExtraction(handleExtracted);
-    const currentJob = savedJobs.find((j) => j.id === currentId) ?? null;
 
-    function startOver() {
-        setCurrentId(null);
-        extraction.reset();
-        setResetKey((k) => k + 1);
-    }
+    // Falls back to the most recent letter, so the page is never blank while
+    // there is something to show.
+    const currentJob =
+        savedJobs.find((j) => j.id === selectedId) ?? savedJobs.at(-1) ?? null;
+    const currentId = currentJob?.id ?? null;
 
-    function selectJob(id: string) {
-        setCurrentId(id);
-        extraction.reset();
+    function goTo(next: View) {
+        // Home always opens on an empty form, unless an extraction is still
+        // running, which keeps streaming in where it was left.
+        if (next === "home" && !extraction.isLoading) {
+            extraction.reset();
+            setResetKey((k) => k + 1);
+        }
+        setSidebarOpen(false);
+        navigate(next);
     }
 
     function deleteJob(id: string) {
         setSavedJobs((prev) => prev.filter((j) => j.id !== id));
-        if (id === currentId) startOver();
+        if (id === selectedId) setSelectedId(null);
     }
 
     // Stable across re-renders (as long as currentId itself hasn't changed) so
@@ -69,58 +77,38 @@ export function App() {
         [currentId, setSavedJobs],
     );
 
+    const menuButton = (
+        <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Åpne meny"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-strong)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] md:hidden"
+        >
+            <svg
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="h-4 w-4"
+            >
+                <path strokeLinecap="round" d="M3 5h14M3 10h14M3 15h14" />
+            </svg>
+        </button>
+    );
+
     return (
-        <div className="mx-auto flex w-full max-w-[1248px]">
-            <Sidebar
-                jobs={savedJobs}
-                currentId={currentId}
-                onSelect={selectJob}
-                onNew={startOver}
-                onDelete={deleteJob}
-                open={sidebarOpen}
-                onClose={() => setSidebarOpen(false)}
+        <div className="mx-auto w-full max-w-[1248px]">
+            <Header
+                view={view}
+                onNavigate={goTo}
+                leading={view === "letters" ? menuButton : undefined}
             />
 
-            <main
-                className={`mx-auto w-full max-w-[768px] flex-1 px-4 pb-16 ${currentJob ? "" : "pt-0"}`}
-            >
-                <button
-                    type="button"
-                    onClick={() => setSidebarOpen(true)}
-                    aria-label="Åpne meny"
-                    className="my-6 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] md:hidden"
-                >
-                    <svg
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        className="h-4 w-4"
-                    >
-                        <path strokeLinecap="round" d="M3 5h14M3 10h14M3 15h14" />
-                    </svg>
-                </button>
-
-                {!currentJob ? (
+            {view === "home" ? (
+                <main className="mx-auto w-full max-w-[768px] px-4 pb-16">
                     <Hero />
-                ) : (
-                    <div className="flex items-start justify-between gap-4 pt-6">
-                        <div>
-                            <Wordmark />
-                            <p className="mt-2 text-[var(--text-secondary)]">
-                                Lim inn URL-en til en stillingsannonse eller teksten
-                                for å hente ut detaljene og skrive en søknad.
-                            </p>
-                        </div>
-                        <Button variant="secondary" size="sm" onClick={startOver}>
-                            Start på nytt
-                        </Button>
-                    </div>
-                )}
 
-                {/* Input phase — hidden once a job has been extracted. */}
-                {!currentJob && (
-                    <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 shadow-[0_1px_3px_rgba(20,24,31,0.06),0_1px_2px_rgba(20,24,31,0.04)]">
+                    <div className="rounded-3xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
                         <JobInput
                             key={resetKey}
                             busy={extraction.isLoading}
@@ -132,41 +120,58 @@ export function App() {
                             </p>
                         )}
                     </div>
-                )}
 
-                {/* Live-streaming details during extraction. */}
-                {!currentJob && extraction.object && (
-                    <div className="mt-8">
-                        <JobDetails
-                            job={extraction.object}
-                            sourceUrl={extraction.pendingUrl ?? undefined}
-                        />
-                    </div>
-                )}
+                    {/* Live-streaming details during extraction. */}
+                    {extraction.object && (
+                        <div className="mt-10">
+                            <JobDetails
+                                job={extraction.object}
+                                sourceUrl={extraction.pendingUrl ?? undefined}
+                            />
+                        </div>
+                    )}
+                </main>
+            ) : (
+                <div className="flex">
+                    <Sidebar
+                        jobs={savedJobs}
+                        currentId={currentId}
+                        onSelect={setSelectedId}
+                        onDelete={deleteJob}
+                        open={sidebarOpen}
+                        onClose={() => setSidebarOpen(false)}
+                    />
 
-                {/* Chat phase — final details plus the application assistant. */}
-                {currentJob && (
-                    <div className="mt-8 space-y-8">
-                        <JobDetails
-                            job={currentJob.jobData}
-                            sourceUrl={currentJob.sourceUrl}
-                        />
-                        <ApplicationChat
-                            key={currentJob.id}
-                            jobId={currentJob.id}
-                            jobData={currentJob.jobData}
-                            initialMessages={currentJob.messages}
-                            onMessagesChange={handleMessagesChange}
-                        />
-                    </div>
-                )}
-            </main>
+                    <main className="mx-auto w-full max-w-[768px] min-w-0 flex-1 px-4 pb-16">
+                        {currentJob ? (
+                            <div className="space-y-10">
+                                <JobDetails
+                                    job={currentJob.jobData}
+                                    sourceUrl={currentJob.sourceUrl}
+                                />
+                                <ApplicationChat
+                                    key={currentJob.id}
+                                    jobId={currentJob.id}
+                                    jobData={currentJob.jobData}
+                                    initialMessages={currentJob.messages}
+                                    onMessagesChange={handleMessagesChange}
+                                />
+                            </div>
+                        ) : (
+                            <p className="pt-10 text-center text-[var(--text-secondary)]">
+                                Ingen påbegynte søknadsbrev ennå. Hent ut en
+                                stilling fra Hjem for å starte et.
+                            </p>
+                        )}
+                    </main>
 
-            {/* Mirrors the sidebar's width so `main` is centred on the page
-                itself rather than on the space left over beside the sidebar.
-                Hidden below md, where the sidebar is a fixed drawer and out
-                of flow anyway. */}
-            <div aria-hidden="true" className="hidden w-60 shrink-0 md:block" />
+                    {/* Mirrors the sidebar's width so `main` is centred on the
+                        page itself rather than on the space left over beside
+                        the sidebar. Hidden below md, where the sidebar is a
+                        fixed drawer and out of flow anyway. */}
+                    <div aria-hidden="true" className="hidden w-60 shrink-0 md:block" />
+                </div>
+            )}
         </div>
     );
 }

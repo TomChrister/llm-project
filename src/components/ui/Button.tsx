@@ -12,16 +12,18 @@ export function Button({
     ...props
 }: ButtonProps) {
     const sizeClasses =
-        size === "sm" ? "px-3.5 py-1.5 text-[13px]" : "px-5 py-2 text-sm";
+        size === "sm" ? "px-4 py-2 text-sm" : "px-4 py-3 text-base";
+    // A half-transparent lime turns olive on the dark canvas, so a disabled
+    // primary drops to the neutral surface instead of fading.
     const variantClasses =
         variant === "primary"
-            ? "bg-[var(--bg-accent)] text-[var(--text-on-accent)] hover:bg-[var(--bg-accent-hover)]"
-            : "border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)]";
+            ? "bg-[var(--bg-accent)] text-[var(--text-on-accent)] hover:bg-[var(--bg-accent-hover)] disabled:bg-[var(--bg-surface-hover)] disabled:text-[var(--text-tertiary)] disabled:opacity-100"
+            : "border border-[var(--border-strong)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)]";
 
     return (
         <button
             {...props}
-            className={`shrink-0 cursor-pointer rounded-lg font-medium whitespace-nowrap disabled:cursor-default disabled:opacity-50 ${sizeClasses} ${variantClasses} ${className}`}
+            className={`shrink-0 cursor-pointer rounded-lg leading-none font-medium whitespace-nowrap disabled:cursor-default disabled:opacity-50 ${sizeClasses} ${variantClasses} ${className}`}
         />
     );
 }
@@ -34,7 +36,7 @@ export function QuickActionButton({
         <button
             type="button"
             {...props}
-            className={`cursor-pointer rounded-full border border-[var(--border-default)] px-3.5 py-1 text-[13px] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] disabled:cursor-default disabled:opacity-50 ${className}`}
+            className={`cursor-pointer rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm leading-none font-medium text-[var(--text-primary)] hover:border-[var(--bg-accent)] hover:bg-[var(--bg-accent)] hover:text-[var(--text-on-accent)] disabled:cursor-default disabled:opacity-50 ${className}`}
         />
     );
 }
