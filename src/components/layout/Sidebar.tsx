@@ -1,11 +1,9 @@
-import { Button } from "@/components/ui/Button";
 import type { SavedJob } from "@/lib/storage";
 
 export function Sidebar({
     jobs,
     currentId,
     onSelect,
-    onNew,
     onDelete,
     open,
     onClose,
@@ -13,7 +11,6 @@ export function Sidebar({
     jobs: SavedJob[];
     currentId: string | null;
     onSelect: (id: string) => void;
-    onNew: () => void;
     onDelete: (id: string) => void;
     // Drawer visibility on mobile — ignored at the md breakpoint and up,
     // where the sidebar is always a static column.
@@ -32,7 +29,7 @@ export function Sidebar({
             />
 
             <div
-                className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col gap-4 overflow-y-auto border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 transition-transform duration-200 md:static md:z-auto md:w-60 md:shrink-0 md:translate-x-0 md:overflow-visible md:bg-transparent md:py-6 md:pr-4 md:pl-0 md:shadow-none ${
+                className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col gap-4 overflow-y-auto border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 transition-transform duration-200 md:static md:z-auto md:w-60 md:shrink-0 md:translate-x-0 md:overflow-visible md:bg-transparent md:pt-0 md:pb-6 md:pr-4 md:pl-0 md:shadow-none ${
                     open ? "translate-x-0 shadow-xl" : "-translate-x-full"
                 }`}
             >
@@ -50,23 +47,13 @@ export function Sidebar({
                     </button>
                 </div>
 
-                <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                        onNew();
-                        onClose();
-                    }}
-                >
-                    Ny uthenting
-                </Button>
                 <div className="flex flex-col gap-0.5">
                     <div className="mb-2 px-3 text-xs font-medium tracking-[var(--tracking-wide)] text-[var(--text-secondary)] uppercase">
-                        Historikk
+                        Påbegynte søknadsbrev
                     </div>
                     {jobs.length === 0 && (
                         <div className="px-3 text-sm text-[var(--text-secondary)]">
-                            Ingen lagrede stillinger ennå.
+                            Ingen påbegynte søknadsbrev ennå.
                         </div>
                     )}
                     {jobs

@@ -26,14 +26,13 @@ describe("Sidebar", () => {
                 jobs={[]}
                 currentId={null}
                 onSelect={vi.fn()}
-                onNew={vi.fn()}
                 onDelete={vi.fn()}
                 open={false}
                 onClose={vi.fn()}
             />,
         );
 
-        expect(screen.getByText("Ingen lagrede stillinger ennå.")).toBeInTheDocument();
+        expect(screen.getByText("Ingen påbegynte søknadsbrev ennå.")).toBeInTheDocument();
     });
 
     it("lists saved jobs and selects one on click", async () => {
@@ -47,7 +46,6 @@ describe("Sidebar", () => {
                 jobs={jobs}
                 currentId={null}
                 onSelect={onSelect}
-                onNew={vi.fn()}
                 onDelete={vi.fn()}
                 open={false}
                 onClose={onClose}
@@ -71,7 +69,6 @@ describe("Sidebar", () => {
                 jobs={jobs}
                 currentId={null}
                 onSelect={onSelect}
-                onNew={vi.fn()}
                 onDelete={onDelete}
                 open={false}
                 onClose={vi.fn()}
@@ -82,26 +79,5 @@ describe("Sidebar", () => {
 
         expect(onDelete).toHaveBeenCalledWith("1");
         expect(onSelect).not.toHaveBeenCalled();
-    });
-
-    it("starts a new extraction via the header button", async () => {
-        const user = userEvent.setup();
-        const onNew = vi.fn();
-
-        render(
-            <Sidebar
-                jobs={[]}
-                currentId={null}
-                onSelect={vi.fn()}
-                onNew={onNew}
-                onDelete={vi.fn()}
-                open={false}
-                onClose={vi.fn()}
-            />,
-        );
-
-        await user.click(screen.getByText("Ny uthenting"));
-
-        expect(onNew).toHaveBeenCalled();
     });
 });
