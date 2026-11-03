@@ -62,33 +62,36 @@ export function Sidebar({
                         .map((job) => (
                             <div
                                 key={job.id}
-                                onClick={() => {
-                                    onSelect(job.id);
-                                    onClose();
-                                }}
-                                className={`flex cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 ${
+                                className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2 ${
                                     job.id === currentId
                                         ? "bg-[var(--bg-surface-hover)]"
                                         : "hover:bg-[var(--bg-surface-hover)]"
                                 }`}
                             >
-                                <div className="min-w-0">
-                                    <div className="truncate text-sm font-medium text-[var(--text-primary)]">
+                                {/* A real button, so the letter can be opened
+                                    with Tab + Enter, not only with a mouse. */}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        onSelect(job.id);
+                                        onClose();
+                                    }}
+                                    aria-current={job.id === currentId ? "true" : undefined}
+                                    className="min-w-0 flex-1 cursor-pointer text-left"
+                                >
+                                    <span className="block truncate text-sm font-medium text-[var(--text-primary)]">
                                         {job.jobData.title}
-                                    </div>
+                                    </span>
                                     {job.jobData.company && (
-                                        <div className="truncate text-xs text-[var(--text-secondary)]">
+                                        <span className="block truncate text-xs text-[var(--text-secondary)]">
                                             {job.jobData.company}
-                                        </div>
+                                        </span>
                                     )}
-                                </div>
+                                </button>
                                 <button
                                     type="button"
                                     title="Fjern"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDelete(job.id);
-                                    }}
+                                    onClick={() => onDelete(job.id)}
                                     className="shrink-0 cursor-pointer px-1 py-0.5 text-sm text-[var(--text-tertiary)] hover:text-[var(--text-danger)]"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path></svg>

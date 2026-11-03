@@ -2,7 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 // `vitest/config` re-exports Vite's defineConfig with the `test` block typed,
 // so the app build and the test run share one config file.
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
@@ -32,5 +32,7 @@ export default defineConfig({
         globals: true,
         environment: "jsdom",
         setupFiles: "./src/setupTests.ts",
+        // .claude/worktrees holds Claude Code's spare copies of the repo.
+        exclude: [...configDefaults.exclude, ".claude/**"],
     },
 });
