@@ -3,9 +3,12 @@ import { app } from "./app.js";
 
 // Stand-in for the model call, so a request that passes every check answers
 // "ok" here instead of reaching Anthropic.
+const streamText = vi.hoisted(() =>
+    vi.fn(() => ({ toUIMessageStreamResponse: () => new Response("ok") })),
+);
 vi.mock("ai", async (importOriginal) => ({
     ...(await importOriginal<typeof import("ai")>()),
-    streamText: () => ({ toUIMessageStreamResponse: () => new Response("ok") }),
+    streamText,
 }));
 
 const JOB = {
@@ -44,10 +47,18 @@ describe("/api/chat", () => {
         const reply = {
             id: "a1",
             role: "assistant",
-            parts: [{ type: "step-start" }, { type: "text", text: "Kjære Acme" }],
+            parts: [
+                { type: "step-start" },
+                { type: "reasoning", text: "Brukeren vil ha et utkast." },
+                { type: "text", text: "Kjære Acme" },
+            ],
         };
         const res = await postChat(JSON.stringify({ messages: [USER_TURN, reply], jobData: JOB }));
         expect(res.status).toBe(200);
+        // Reasoning comes from the client, so it must never reach the model.
+        const sent = JSON.stringify(streamText.mock.lastCall);
+        expect(sent).toContain("Kjære Acme");
+        expect(sent).not.toContain("Brukeren vil ha et utkast.");
     });
 
     it.each([
