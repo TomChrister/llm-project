@@ -82,7 +82,7 @@ export function App() {
             type="button"
             onClick={() => setSidebarOpen(true)}
             aria-label="Åpne meny"
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-black text-black hover:bg-[var(--bg-surface-hover)] md:hidden"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-strong)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] md:hidden"
         >
             <svg
                 viewBox="0 0 20 20"

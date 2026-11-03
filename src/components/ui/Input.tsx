@@ -1,7 +1,7 @@
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 
 const fieldClasses =
-    "w-full rounded-3xl border border-[var(--border-default)] bg-[var(--bg-input)] px-6 py-4 text-base shadow-[0_1px_0_rgba(0,0,0,0.04)] text-[var(--text-primary)] placeholder-[var(--text-placeholder)] outline-none focus:border-[var(--border-hover)]";
+    "w-full rounded-3xl border border-[var(--border-default)] bg-[var(--bg-input)] px-6 py-4 text-base text-[var(--text-primary)] placeholder-[var(--text-placeholder)] outline-none focus:border-[var(--border-hover)]";
 
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
     return <input {...props} className={fieldClasses} />;

@@ -23,7 +23,7 @@ export function Sidebar({
             <div
                 onClick={onClose}
                 aria-hidden="true"
-                className={`fixed inset-0 z-30 bg-black/40 transition-opacity duration-200 md:hidden ${
+                className={`fixed inset-0 z-30 bg-black/60 transition-opacity duration-200 md:hidden ${
                     open ? "opacity-100" : "pointer-events-none opacity-0"
                 }`}
             />

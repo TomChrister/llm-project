@@ -76,7 +76,7 @@ export function JobDetails({
                         target="_blank"
                         rel="noopener noreferrer"
                         title={sourceUrl}
-                        className="mt-1 inline-block max-w-full truncate align-bottom text-sm text-[var(--text-tertiary)] underline decoration-[var(--border-default)] underline-offset-2 hover:text-black hover:decoration-black"
+                        className="mt-1 inline-block max-w-full truncate align-bottom text-sm text-[var(--text-tertiary)] underline decoration-[var(--border-default)] underline-offset-2 hover:text-[var(--text-primary)] hover:decoration-[var(--text-primary)]"
                     >
                         {displayUrl(sourceUrl)}
                     </a>
@@ -113,7 +113,7 @@ export function JobDetails({
                                 key={i}
                                 className="flex gap-2 text-base leading-normal text-[var(--text-primary)]"
                             >
-                                <span className="text-black">•</span>
+                                <span className="text-[var(--text-primary)]">•</span>
                                 <span>{r}</span>
                             </li>
                         ))}
