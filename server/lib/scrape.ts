@@ -1,30 +1,20 @@
-// Server-side fetching of a job posting from a URL.
+// Server-side fetching of a job posting from a URL, in two steps:
 //
-// A single strategy never covers the web: server-rendered pages need
-// Readability, SEO-conscious boards publish JSON-LD, and the ones built as
-// pure JavaScript apps hand a crawler nothing but an empty <div>. So this is a
-// chain of strategies, tried cheapest-and-cleanest first, where each one is
-// allowed to come up empty:
+//   1. Readability — fetch the page and pull out its main text with the
+//      algorithm behind Firefox Reader View. Free, and covers ordinary
+//      server-rendered pages.
+//   2. Jina Reader — if that finds nothing (typically a page that builds itself
+//      with JavaScript in the browser), ask r.jina.ai, which runs the page in a
+//      real browser and returns its text. Free with a rate limit; set
+//      JINA_API_KEY for a higher one. Note that this sends the URL to Jina.
 //
-//   1. ATS adapter    — a known board's public JSON API (see scrape-adapters)
-//   2. JSON-LD        — schema.org JobPosting embedded in the page
-//   3. Readability    — the algorithm behind Firefox Reader View
-//   4. Hydration JSON — the payload a client-rendered page hydrates from
-//   5. Renderer       — an external service that executes the page's JS,
-//                       only if SCRAPE_RENDER_ENDPOINT is configured
-//
-// Steps 1-4 are free and cover the large majority of postings. Step 5 is the
-// only universal answer to a JavaScript-only page, and it costs money or a
-// dependency, so it is opt-in. When everything fails we say plainly that the
-// page needs JavaScript and point the user at the paste-the-text path, which
+// When both come up empty the user is told to paste the text instead, which
 // always works.
 //
-// Uses linkedom rather than jsdom for the DOM Readability needs: it is a
-// fraction of jsdom's size and dependency tree, which matters for a
-// serverless function that is bundled and cold-started on demand.
-import { matchAdapter } from "./scrape-adapters.js";
-import { extractFromHtml, looksClientRendered } from "./scrape-extractors.js";
-import { normalizeWhitespace, sufficient } from "./scrape-text.js";
+// Uses linkedom rather than jsdom for the DOM Readability needs: a fraction of
+// jsdom's size, which matters for a serverless function that cold-starts.
+import { Readability } from "@mozilla/readability";
+import { parseHTML } from "linkedom";
 import { normalizeUrlInput } from "../../shared/url.js";
 
 // Thrown for every expected failure so the route can map it to a friendly
@@ -40,15 +30,17 @@ export class ScrapeError extends Error {
 }
 
 const FETCH_TIMEOUT_MS = 10_000;
-// A renderer has to load and run the page, so it needs a lot longer than a
-// plain fetch. Still well inside the route's maxDuration of 60s.
-const RENDER_TIMEOUT_MS = 25_000;
+// Jina loads and runs the page, so it needs longer than a plain fetch. Still
+// well inside the route's maxDuration of 60s.
+const JINA_TIMEOUT_MS = 25_000;
 const MAX_HTML_BYTES = 3_000_000; // don't try to parse enormous pages
 const MAX_REDIRECTS = 5;
+// A JS-only page still yields some nav/cookie text, so demand enough text to
+// be a real posting before accepting a result.
+const MIN_TEXT_CHARS = 200;
 
-// A plausible browser UA. Several ATS platforms sit behind a WAF that serves a
-// challenge page to anything self-identifying as a bot, which we would then
-// dutifully fail to extract a posting from.
+// A plausible browser UA. Several job boards sit behind a WAF that serves a
+// challenge page to anything self-identifying as a bot.
 const USER_AGENT =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
     "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
@@ -56,13 +48,11 @@ const USER_AGENT =
 // Basic SSRF guard: this endpoint fetches a user-supplied URL server-side, so
 // refuse obvious internal/loopback targets, on the first URL and on every
 // redirect. Not exhaustive (DNS can still point a public host at a private
-// IP), but it blocks the easy cases for a demo.
+// IP), but it blocks the easy cases.
 function assertPublicHttpUrl(raw: string): URL {
     let url: URL;
     try {
-        // A pasted address usually has no scheme; assume https rather than
-        // rejecting it. The client normalizes too, but this route is also
-        // reachable directly.
+        // A pasted address usually has no scheme; assume https.
         url = new URL(normalizeUrlInput(raw));
     } catch {
         throw new ScrapeError("Det ser ikke ut som en gyldig URL.", 400);
@@ -98,34 +88,41 @@ function assertPublicHttpUrl(raw: string): URL {
     return url;
 }
 
-type FetchedBody = { body: string; contentType: string; url: string };
+/** Collapse runs of spaces and blank lines left over from the markup. */
+function normalizeWhitespace(text: string): string {
+    return text
+        .replace(/\r\n?/g, "\n")
+        .replace(/[ \t\u00a0]+/g, " ")
+        .split("\n")
+        .map((line) => line.trim())
+        .join("\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+}
 
-async function fetchBody(
-    target: string,
-    accept: string,
-    timeoutMs: number,
-    headers: Record<string, string> = {},
-): Promise<FetchedBody> {
-    // Redirects are followed by hand so every hop goes through the SSRF
-    // guard — with redirect: "follow", a public page could 302 us to
-    // 127.0.0.1 after the first check had already passed.
-    const signal = AbortSignal.timeout(timeoutMs);
-    const origin = new URL(target).origin;
-    let current = target;
+/** The cleaned text if it is long enough to be a real posting, else null. */
+function sufficient(text: string | null | undefined): string | null {
+    const cleaned = normalizeWhitespace(text ?? "");
+    return cleaned.length >= MIN_TEXT_CHARS ? cleaned : null;
+}
+
+/**
+ * Fetch a page's HTML. Redirects are followed by hand so every hop goes
+ * through the SSRF guard — with redirect: "follow", a public page could 302
+ * us to 127.0.0.1 after the first check had already passed.
+ */
+async function fetchPage(url: URL): Promise<{ html: string; url: string }> {
+    const signal = AbortSignal.timeout(FETCH_TIMEOUT_MS);
+    let current = url.href;
     let res: Response;
     for (let hop = 0; ; hop++) {
-        // The caller's headers (the renderer's bearer token) are only for the
-        // site they were meant for — fetch's own redirect handling drops them
-        // on a cross-origin hop, so this loop must too.
-        const sameOrigin = new URL(current).origin === origin;
         try {
             res = await fetch(current, {
                 redirect: "manual",
                 signal,
                 headers: {
                     "User-Agent": USER_AGENT,
-                    Accept: accept,
-                    ...(sameOrigin ? headers : {}),
+                    Accept: "text/html,application/xhtml+xml",
                 },
             });
         } catch (err) {
@@ -134,7 +131,7 @@ async function fetchBody(
                 timedOut
                     ? "Siden brukte for lang tid på å svare."
                     : "Klarte ikke å nå den siden.",
-                502,
+                timedOut ? 504 : 502,
             );
         }
         const location = res.headers.get("location");
@@ -146,17 +143,17 @@ async function fetchBody(
     }
 
     if (!res.ok) {
+        const gone = res.status === 404 || res.status === 410;
+        throw new ScrapeError(`Siden returnerte en feil (HTTP ${res.status}).`, gone ? 422 : 502);
+    }
+    if (!(res.headers.get("content-type") ?? "").includes("html")) {
+        await res.body?.cancel();
         throw new ScrapeError(
-            `Siden returnerte en feil (HTTP ${res.status}).`,
-            502,
+            "Den URL-en er ikke en HTML-side — lim inn teksten i stedet.",
+            415,
         );
     }
-
-    return {
-        body: await readCapped(res),
-        contentType: res.headers.get("content-type") ?? "",
-        url: current,
-    };
+    return { html: await readCapped(res), url: current };
 }
 
 /**
@@ -189,79 +186,34 @@ async function readCapped(res: Response): Promise<string> {
     return text + decoder.decode();
 }
 
-/** Step 1: a known ATS board's JSON API. Never fatal — we can still scrape. */
-async function tryAdapter(url: URL): Promise<string | null> {
-    const match = matchAdapter(url);
-    if (!match) return null;
-
-    try {
-        const { body } = await fetchBody(
-            match.apiUrl,
-            "application/json",
-            FETCH_TIMEOUT_MS,
-        );
-        return sufficient(match.adapter.parse(JSON.parse(body)));
-    } catch (err) {
-        // A moved/renamed API shouldn't break the URL entirely — fall through
-        // to the generic extractors against the page itself.
-        console.warn(`Scrape adapter ${match.adapter.name} failed`, err);
-        return null;
-    }
+/** Step 1: the page's main text via Readability, or null if too little. */
+function fromReadability(html: string, baseUrl: string): string | null {
+    const { document } = parseHTML(html, { location: { href: baseUrl } });
+    return sufficient(new Readability(document).parse()?.textContent);
 }
 
 /**
- * Step 5: hand the URL to a service that runs the page's JavaScript and gives
- * us back the result. Opt-in via env so the app has no such dependency by
- * default:
- *
- *   SCRAPE_RENDER_ENDPOINT  URL template containing {url}, which is replaced
- *                           with the URL-encoded target. If the placeholder is
- *                           missing the target is appended instead, which is
- *                           the shape reader proxies use.
- *   SCRAPE_RENDER_TOKEN     optional bearer token for that service.
- *
- * The response may be HTML (headless-browser services) or already-extracted
- * text/markdown (reader proxies); both are handled.
+ * Step 2: Jina Reader renders the page and returns its text. Jina is a fixed,
+ * trusted host doing the fetch on its own servers, so the SSRF guard above
+ * has already done its job on the user's URL. Never fatal: a rate limit or
+ * outage just means we fall through to "paste the text".
  */
-async function tryRenderer(url: URL): Promise<string | null> {
-    const template = process.env.SCRAPE_RENDER_ENDPOINT;
-    if (!template) return null;
-
-    const endpoint = template.includes("{url}")
-        ? template.replace("{url}", encodeURIComponent(url.href))
-        : `${template}${url.href}`;
-    const token = process.env.SCRAPE_RENDER_TOKEN;
-
+async function fromJina(url: URL): Promise<string | null> {
+    const key = process.env.JINA_API_KEY;
     try {
-        const rendered = await fetchBody(
-            endpoint,
-            "text/html,text/plain",
-            RENDER_TIMEOUT_MS,
-            token ? { Authorization: `Bearer ${token}` } : {},
-        );
-        if (rendered.contentType.includes("html")) {
-            return sufficient(extractFromHtml(rendered.body, url.href));
-        }
-        return sufficient(normalizeWhitespace(rendered.body));
+        const res = await fetch(`https://r.jina.ai/${url.href}`, {
+            signal: AbortSignal.timeout(JINA_TIMEOUT_MS),
+            headers: {
+                Accept: "text/plain",
+                ...(key ? { Authorization: `Bearer ${key}` } : {}),
+            },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return sufficient(await res.text());
     } catch (err) {
-        console.warn("Scrape renderer failed", err);
+        console.warn("Jina Reader failed", err);
         return null;
     }
-}
-
-function noContentError(html: string): ScrapeError {
-    if (looksClientRendered(html)) {
-        return new ScrapeError(
-            "Denne siden bygger innholdet med JavaScript i nettleseren, så " +
-                "serveren vår ser en tom side. Kopier teksten fra annonsen og " +
-                "lim den inn i stedet.",
-            422,
-        );
-    }
-    return new ScrapeError(
-        "Fant ikke lesbart stillingsannonseinnhold på den siden.",
-        422,
-    );
 }
 
 /**
@@ -271,26 +223,27 @@ function noContentError(html: string): ScrapeError {
 export async function fetchReadableText(rawUrl: string): Promise<string> {
     const url = assertPublicHttpUrl(rawUrl);
 
-    const viaAdapter = await tryAdapter(url);
-    if (viaAdapter) return viaAdapter;
-
-    const page = await fetchBody(
-        url.href,
-        "text/html,application/xhtml+xml",
-        FETCH_TIMEOUT_MS,
-    );
-    if (!page.contentType.includes("html")) {
-        throw new ScrapeError(
-            "Den URL-en er ikke en HTML-side — lim inn teksten i stedet.",
-            415,
-        );
+    // A page that blocks us or errors (502) may still work through Jina, which
+    // fetches from a real browser. Other failures are final: a 404/410 (the ad
+    // is gone), a timeout (Jina would only add 25s to a 60s budget), a redirect
+    // to a private address, a non-HTML file, a huge page.
+    let pageError: ScrapeError | null = null;
+    let text: string | null = null;
+    try {
+        const page = await fetchPage(url);
+        text = fromReadability(page.html, page.url);
+    } catch (err) {
+        if (!(err instanceof ScrapeError && err.status === 502)) throw err;
+        pageError = err;
     }
 
-    const viaHtml = sufficient(extractFromHtml(page.body, page.url));
-    if (viaHtml) return viaHtml;
+    text ??= await fromJina(url);
+    if (text) return text;
+    if (pageError) throw pageError;
 
-    const viaRenderer = await tryRenderer(url);
-    if (viaRenderer) return viaRenderer;
-
-    throw noContentError(page.body);
+    throw new ScrapeError(
+        "Fant ikke lesbart stillingsannonseinnhold på den siden. Kopier " +
+            "teksten fra annonsen og lim den inn i stedet.",
+        422,
+    );
 }
