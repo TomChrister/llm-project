@@ -14,9 +14,18 @@ import "@/styles/globals.css";
 const root = document.getElementById("root");
 if (!root) throw new Error("Fant ikke #root i index.html");
 
+if (new URLSearchParams(window.location.search).has("noanalytics")) {
+    localStorage.setItem("va-disable", "1")
+}
+
 createRoot(root).render(
     <StrictMode>
         <App />
-        <Analytics />
+        <Analytics
+            beforeSend={(event) => {
+                if (localStorage.getItem("va-disable")) return null;
+                return event;
+            }}
+        />
     </StrictMode>,
 );
