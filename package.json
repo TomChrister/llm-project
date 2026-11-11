@@ -50,5 +50,10 @@
     "vite": "^8.2.2",
     "vitest": "^4.1.10"
   },
-  "type": "module"
+  "type": "module",
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.1"
+    }
+  }
 }
