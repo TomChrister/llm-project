@@ -57,22 +57,15 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173).
 
-### Optional: rendering JavaScript-only job pages
+### Optional: Jina Reader API key
 
-Most job pages can be read from their HTML (see [Reading a job URL](#reading-a-job-url)),
-but a page that builds itself entirely in the browser gives a server-side
-fetch nothing to read. To cover those too, point the app at a service that
-executes the page's JavaScript:
+Job pages that build themselves with JavaScript are read through
+[Jina Reader](https://jina.ai/reader/) (see [Reading a job URL](#reading-a-job-url)).
+It works without a key, with a rate limit; a free key raises it:
 
 ```bash
-SCRAPE_RENDER_ENDPOINT=https://r.jina.ai/{url}   # {url} is replaced, URL-encoded
-SCRAPE_RENDER_TOKEN=...                          # optional bearer token
+JINA_API_KEY=...   # optional
 ```
-
-Anything that takes a URL and returns rendered HTML or plain text works —
-[Jina Reader](https://jina.ai/reader/), Browserless, ScrapingBee. Without it
-the app simply asks the user to paste the text instead. Note that this sends
-the URL to a third party.
 
 ## Project structure
 
@@ -93,10 +86,7 @@ server/                       # Hono API: owns the API key and all outside fetch
   index.ts                    # Node entrypoint for `npm run dev`
   routes/extract.ts           # URL fetch + streamObject extraction
   routes/chat.ts              # streamText chat, job data as persistent system context
-  lib/scrape.ts               # URL fetch orchestration + SSRF guarding
-  lib/scrape-adapters.ts      # public JSON APIs of known ATS platforms
-  lib/scrape-extractors.ts    # JSON-LD / Readability / hydration-payload extractors
-  lib/scrape-text.ts          # HTML-to-text and field-formatting helpers
+  lib/scrape.ts               # URL fetch (Readability, Jina fallback) + SSRF guarding
 shared/                       # imported by both sides as @shared/
   schema.ts                   # Zod schema for the extracted job posting
   url.ts                      # normalizes a pasted URL
@@ -105,27 +95,17 @@ api/[...route].ts             # Vercel function wrapping server/app.ts
 
 ## Reading a job URL
 
-No single technique reads every job board, so `fetchReadableText` runs a chain
-of strategies and takes the first that yields a real posting:
+`fetchReadableText` in `server/lib/scrape.ts` tries two steps and takes the
+first that yields a real posting:
 
-| # | Strategy | Catches |
-|---|----------|---------|
-| 1 | **ATS adapter** — the board's public JSON API | BambooHR, Greenhouse, Lever |
-| 2 | **JSON-LD** — a schema.org `JobPosting` in the page | anything indexed by Google Jobs |
-| 3 | **Readability** — Firefox Reader View's algorithm | ordinary server-rendered pages |
-| 4 | **Hydration payload** — `__NEXT_DATA__`, `__NUXT__`, `application/json` | client-rendered pages that still ship their data |
-| 5 | **Renderer** — an external service that runs the page's JS | everything else, if configured |
+| # | Step | Catches |
+|---|------|---------|
+| 1 | **Readability** — fetch the page, extract its main text (Firefox Reader View's algorithm) | ordinary server-rendered pages |
+| 2 | **Jina Reader** — `r.jina.ai` runs the page in a browser and returns its text | JavaScript-only pages, and pages that block a plain fetch |
 
-Steps 1–4 need nothing but a fetch. Step 5 is opt-in (see
-[above](#optional-rendering-javascript-only-job-pages)). When all of them come
-up empty the user is told the page needs JavaScript and pointed at the
-paste-the-text input, which always works.
-
-Supporting another board is a local change in `scrape-adapters.ts`: a
-`resolve()` mapping the public URL to the API URL, a `parse()` turning the
-response into text, and one entry in `ADAPTERS`. Live smoke tests for the
-existing adapters live in `scrape.live.test.ts` and run with
-`SCRAPE_LIVE_TESTS=1 npm test -- scrape.live`.
+Step 2 sends the URL to a third party. When both come up empty the user is
+pointed at the paste-the-text input, which always works. Live smoke tests
+against real boards run with `SCRAPE_LIVE_TESTS=1 npm test -- scrape.live`.
 
 ## Deploying
 
