@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { SavedJob } from "@/lib/storage";
 
 export function Sidebar({
@@ -17,6 +18,13 @@ export function Sidebar({
     open: boolean;
     onClose: () => void;
 }) {
+    // Opening the drawer moves focus into it, so Escape and Tab work from
+    // there instead of from the menu button left behind the backdrop.
+    const closeButton = useRef<HTMLButtonElement>(null);
+    useEffect(() => {
+        if (open) closeButton.current?.focus();
+    }, [open]);
+
     return (
         <>
             {/* Backdrop — mobile only, closes the drawer on tap-outside. */}
@@ -29,13 +37,17 @@ export function Sidebar({
             />
 
             {/* max-md:invisible takes the closed drawer's buttons out of the
-                tab order; sliding it off screen alone leaves them focusable. */}
+                tab order; sliding it off screen alone leaves them focusable.
+                Visibility only transitions on the way out: on the way in it
+                must flip at once, or the close button can't take focus yet. */}
             <div
                 onKeyDown={(e) => {
                     if (e.key === "Escape") onClose();
                 }}
-                className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col gap-4 overflow-y-auto border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 transition-[translate,visibility] duration-200 md:static md:z-auto md:w-60 md:shrink-0 md:translate-x-0 md:overflow-visible md:bg-transparent md:pt-0 md:pb-6 md:pr-4 md:pl-0 md:shadow-none ${
-                    open ? "translate-x-0 shadow-xl" : "-translate-x-full max-md:invisible"
+                className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col gap-4 overflow-y-auto border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 duration-200 md:static md:z-auto md:w-60 md:shrink-0 md:translate-x-0 md:overflow-visible md:bg-transparent md:pt-0 md:pb-6 md:pr-4 md:pl-0 md:shadow-none ${
+                    open
+                        ? "translate-x-0 shadow-xl transition-[translate]"
+                        : "-translate-x-full transition-[translate,visibility] max-md:invisible"
                 }`}
             >
                 <div className="flex items-center justify-between gap-2 md:hidden">
@@ -43,6 +55,7 @@ export function Sidebar({
                         Meny
                     </span>
                     <button
+                        ref={closeButton}
                         type="button"
                         onClick={onClose}
                         aria-label="Lukk meny"
