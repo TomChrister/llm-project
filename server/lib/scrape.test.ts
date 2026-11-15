@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ScrapeError, fetchReadableText } from "./scrape.js";
+import { ScrapeError, fetchReadableText } from "./scrape";
 
 // Long enough to clear MIN_TEXT_CHARS (200).
 const BODY = (

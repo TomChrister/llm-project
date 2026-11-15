@@ -31,8 +31,8 @@ it.
 
 ## Tech stack
 
-- [React](https://react.dev) + [Vite](https://vite.dev) + TypeScript
-- [Hono](https://hono.dev) on Node for the API
+- [Next.js](https://nextjs.org) (App Router) + [React](https://react.dev) + TypeScript
+- Route handlers on the Node.js runtime for the API
 - [Vercel AI SDK](https://ai-sdk.dev) (`streamObject` for extraction,
   `streamText` for chat) with the Anthropic provider
 - [Zod](https://zod.dev) for the extraction schema
@@ -47,15 +47,20 @@ Create a `.env` file with an Anthropic API key:
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Then install dependencies and start both halves (Vite on 5173, the API on
-3001; Vite proxies `/api` to it):
+Then install dependencies and start the dev server. It needs Node 22.22 or
+newer (the test environment, jsdom, will not start on older versions):
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173).
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000). The dev server binds to
+loopback only, because the API spends your Anthropic key and has none of the
+deployed rate limit.
+
+`npm test` runs the tests, `npm run lint` the linter, and `npm run build` a
+production build.
 
 ### Optional: Jina Reader API key
 
@@ -70,28 +75,44 @@ JINA_API_KEY=...   # optional
 ## Project structure
 
 ```
-src/                          # React client (Vite), imported as @/
+src/
+  app/                        # Next.js App Router entry points
+    layout.tsx                # <html lang="no">, metadata, fonts, global CSS
+    page.tsx                  # the one page; renders ClientApp
+    ClientApp.tsx             # the only "use client" boundary; loads App without SSR
+    globals.css               # Tailwind + design tokens
+    api/
+      extract/route.ts        # URL fetch + streamObject extraction
+      chat/route.ts           # streamText chat, job data as persistent system context
+      health/route.ts         # GET /api/health
   App.tsx                     # orchestrates input/extraction/chat + history state
-  hooks/useJobExtraction.ts   # one streaming extraction (useObject) and its errors
+  hooks/
+    useJobExtraction.ts       # one streaming extraction (useObject) and its errors
+    useView.ts                # Home / Letters view, mirrored in the URL hash
   components/
     job/                      # JobInput (URL/text + examples), JobDetails (the card)
     chat/ApplicationChat.tsx  # cover-letter chat with quick actions
-    layout/                   # Sidebar (history) and Hero
+    layout/                   # Header, Sidebar (history) and Hero
     ui/                       # design-system primitives (Button, Chip, Card, ...)
   lib/
     storage.ts                # localStorage-backed job history (useSyncExternalStore)
     examples.ts               # fictional example postings for the input screen
-server/                       # Hono API: owns the API key and all outside fetches
-  app.ts                      # the app: body limit + routes
-  index.ts                    # Node entrypoint for `npm run dev`
-  routes/extract.ts           # URL fetch + streamObject extraction
-  routes/chat.ts              # streamText chat, job data as persistent system context
-  lib/scrape.ts               # URL fetch (Readability, Jina fallback) + SSRF guarding
+server/lib/                   # server-only code used by the route handlers
+  scrape.ts                   # URL fetch (Readability, Jina fallback) + SSRF guarding
+  body.ts                     # reads a JSON body, capped at 256 KB
 shared/                       # imported by both sides as @shared/
   schema.ts                   # Zod schema for the extracted job posting
   url.ts                      # normalizes a pasted URL
-api/[...route].ts             # Vercel function wrapping server/app.ts
 ```
+
+### Server and client
+
+`layout.tsx` and `page.tsx` are Server Components, but they only render the
+shell. Everything the user sees is built from the URL hash and `localStorage`,
+which the server never has, so `ClientApp.tsx` loads the app with
+`ssr: false` rather than server-rendering an empty home page that would flash
+before the real view replaced it. That file carries the only `"use client"`
+directive in the project; everything it imports is client code already.
 
 ## Reading a job URL
 
@@ -109,31 +130,22 @@ against real boards run with `SCRAPE_LIVE_TESTS=1 npm test -- scrape.live`.
 
 ## Deploying
 
-Everything deploys to [Vercel](https://vercel.com) as one project. The client
-is a static Vite build; the API is the same Hono app served as a function.
+Everything deploys to [Vercel](https://vercel.com) as one Next.js project,
+with no `vercel.json`: the page is prerendered as static HTML and each file
+under `src/app/api/` becomes a function.
 
-`server/app.ts` builds the app and mounts the routes; nothing in it knows
-where it runs. Two entrypoints pick that up:
-
-- `api/[...route].ts` — the Vercel function. The catch-all filename means
-  Vercel's filesystem routing hands it every `/api/*` request with the path
-  intact, so the app routes exactly as it does under Node.
-- `server/index.ts` — a standalone Node process, used by `npm run dev`.
-  Vercel never loads it.
-
-Because both halves are served from one origin, the client's relative `/api`
-calls need no base URL and neither side needs CORS.
+Because the page and the API are served from one origin, the client's
+relative `/api` calls need no base URL and neither side needs CORS.
 
 Set `ANTHROPIC_API_KEY` as an environment variable in the Vercel project. It
-is read only inside `server/`, never reaches the client bundle, and is only
-in your local `.env` (gitignored) otherwise. Keep it that way by leaving
-every Anthropic call in `server/`.
+is read only inside the route handlers, never reaches the client bundle, and
+is only in your local `.env` (gitignored) otherwise. Keep it that way by
+leaving every Anthropic call in `src/app/api/`, and never give it a
+`NEXT_PUBLIC_` prefix — that is what inlines a variable into browser code.
 
-Two settings in `vercel.json` are load-bearing. `functions.maxDuration` is
-60s because a slow page fetch plus a full generation does not fit in the 10s
-default — the request would be cut off mid-stream. The rewrite sends every
-path *except* `/api/` to `index.html`, without which a hard reload on a deep
-link 404s.
+`export const maxDuration = 60` in the extract and chat routes is
+load-bearing: a slow page fetch plus a full generation does not fit in a
+short default limit, and the request would be cut off mid-stream.
 
 The API also needs a **Vercel Firewall rate-limit rule**, which lives in the
 project dashboard, not in this repo: request path starts with `/api/`, fixed

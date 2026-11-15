@@ -1,8 +1,8 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { streamObject } from "ai";
-import { Hono } from "hono";
-import { jobPostingSchema, NOT_A_JOB_TITLE } from "../../shared/schema.js";
-import { fetchReadableText, ScrapeError } from "../lib/scrape.js";
+import { jobPostingSchema, NOT_A_JOB_TITLE } from "@shared/schema";
+import { readJsonBody } from "../../../../server/lib/body";
+import { fetchReadableText, ScrapeError } from "../../../../server/lib/scrape";
 
 type ExtractBody = { mode?: "url" | "text"; value?: string };
 
@@ -26,23 +26,21 @@ const SYSTEM =
     "use Norwegian. If the text is clearly not a job posting, return the " +
     `title '${NOT_A_JOB_TITLE}' with empty arrays.`;
 
-export const extractRoute = new Hono();
+// A slow page fetch plus a full generation does not fit in the platform's
+// default time limit — the request would be cut off mid-stream.
+export const maxDuration = 60;
 
-extractRoute.post("/", async (c) => {
-    let body: ExtractBody;
-    try {
-        body = await c.req.json();
-    } catch {
-        return c.json({ error: "Ugyldig forespørsel." }, 400);
-    }
+const error = (message: string, status: number) =>
+    Response.json({ error: message }, { status });
+
+export async function POST(request: Request) {
+    const body = await readJsonBody<ExtractBody>(request);
+    if (body instanceof Response) return body;
 
     // The body comes from anyone, so check the type before calling .trim().
     const value = typeof body.value === "string" ? body.value.trim() : "";
     if (!value) {
-        return c.json(
-            { error: "Lim inn en stillingsannonse-URL eller teksten først." },
-            400,
-        );
+        return error("Lim inn en stillingsannonse-URL eller teksten først.", 400);
     }
 
     // Resolve the posting text: fetch + strip a URL, or use the pasted text.
@@ -51,17 +49,14 @@ extractRoute.post("/", async (c) => {
         text = body.mode === "url" ? await fetchReadableText(value) : value;
     } catch (err) {
         if (err instanceof ScrapeError) {
-            return c.json({ error: err.message }, err.status as 400);
+            return error(err.message, err.status);
         }
         console.error("Extraction fetch error", err);
-        return c.json({ error: "Klarte ikke å lese den stillingsannonsen." }, 500);
+        return error("Klarte ikke å lese den stillingsannonsen.", 500);
     }
 
     if (body.mode === "text" && text.length < 50) {
-        return c.json(
-            { error: "Teksten er for kort til å ligne en stillingsannonse." },
-            400,
-        );
+        return error("Teksten er for kort til å ligne en stillingsannonse.", 400);
     }
 
     const result = streamObject({
@@ -74,7 +69,8 @@ extractRoute.post("/", async (c) => {
         maxOutputTokens: 2_000,
     });
 
-    // toTextStreamResponse pairs with useObject on the client. Hono passes a
-    // returned Response through untouched, so the stream is not buffered.
+    // toTextStreamResponse pairs with useObject on the client. A route handler
+    // passes a returned Response through untouched, so the stream is not
+    // buffered.
     return result.toTextStreamResponse();
-});
+}

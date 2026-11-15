@@ -28,9 +28,14 @@ export function Sidebar({
                 }`}
             />
 
+            {/* max-md:invisible takes the closed drawer's buttons out of the
+                tab order; sliding it off screen alone leaves them focusable. */}
             <div
-                className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col gap-4 overflow-y-auto border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 transition-transform duration-200 md:static md:z-auto md:w-60 md:shrink-0 md:translate-x-0 md:overflow-visible md:bg-transparent md:pt-0 md:pb-6 md:pr-4 md:pl-0 md:shadow-none ${
-                    open ? "translate-x-0 shadow-xl" : "-translate-x-full"
+                onKeyDown={(e) => {
+                    if (e.key === "Escape") onClose();
+                }}
+                className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col gap-4 overflow-y-auto border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 transition-[translate,visibility] duration-200 md:static md:z-auto md:w-60 md:shrink-0 md:translate-x-0 md:overflow-visible md:bg-transparent md:pt-0 md:pb-6 md:pr-4 md:pl-0 md:shadow-none ${
+                    open ? "translate-x-0 shadow-xl" : "-translate-x-full max-md:invisible"
                 }`}
             >
                 <div className="flex items-center justify-between gap-2 md:hidden">

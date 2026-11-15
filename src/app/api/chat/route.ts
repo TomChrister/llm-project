@@ -1,7 +1,7 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
-import { Hono } from "hono";
-import { jobPostingSchema, type JobPosting } from "../../shared/schema.js";
+import { jobPostingSchema, type JobPosting } from "@shared/schema";
+import { readJsonBody } from "../../../../server/lib/body";
 
 type ChatBody = { messages?: unknown; jobData?: unknown };
 
@@ -59,33 +59,32 @@ function systemPrompt(jobData: JobPosting): string {
     );
 }
 
-export const chatRoute = new Hono();
+// A slow model reply does not fit in the platform's default time limit.
+export const maxDuration = 60;
+
+const invalid = () => Response.json({ error: "Ugyldig forespørsel." }, { status: 400 });
 
 // The client sends `jobData` with every request (via the chat transport body),
 // so the extracted posting stays in the system context for the whole
 // conversation — not just the first turn.
-chatRoute.post("/", async (c) => {
-    let body: ChatBody;
-    try {
-        body = await c.req.json();
-    } catch {
-        return c.json({ error: "Ugyldig forespørsel." }, 400);
-    }
+export async function POST(request: Request) {
+    const body = await readJsonBody<ChatBody>(request);
+    if (body instanceof Response) return body;
     const { messages } = body;
     if (!Array.isArray(messages) || messages.length === 0) {
-        return c.json({ error: "Ugyldig forespørsel." }, 400);
+        return invalid();
     }
     if (messages.length > MAX_MESSAGES) {
-        return c.json({ error: "Samtalen er for lang. Start en ny." }, 413);
+        return Response.json({ error: "Samtalen er for lang. Start en ny." }, { status: 413 });
     }
     if (!messages.every(isTextTurn)) {
-        return c.json({ error: "Ugyldig forespørsel." }, 400);
+        return invalid();
     }
     // The app always sends the job, and it goes into the system prompt, so
     // it must be a real posting of a sane size — not free-form instructions.
     const job = jobPostingSchema.safeParse(body.jobData);
     if (!job.success || JSON.stringify(job.data).length > MAX_JOB_DATA_CHARS) {
-        return c.json({ error: "Ugyldig forespørsel." }, 400);
+        return invalid();
     }
     const jobData: JobPosting = job.data;
 
@@ -106,4 +105,4 @@ chatRoute.post("/", async (c) => {
     // The UI never shows the model's thinking, so don't stream it to the
     // browser to be stored and sent back every turn.
     return result.toUIMessageStreamResponse({ sendReasoning: false });
-});
+}
