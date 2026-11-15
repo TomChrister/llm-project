@@ -5,7 +5,7 @@ export function ChatBubble({
     streaming,
     children,
 }: {
-    role: "user" | "assistant" | (string & {});
+    role: string;
     streaming?: boolean;
     children: ReactNode;
 }) {

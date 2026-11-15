@@ -24,6 +24,9 @@
       ],
       "@shared/*": [
         "./shared/*"
+      ],
+      "@server/*": [
+        "./server/*"
       ]
     },
     "allowJs": true,

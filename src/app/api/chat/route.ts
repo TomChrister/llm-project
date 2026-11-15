@@ -1,7 +1,7 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { jobPostingSchema, type JobPosting } from "@shared/schema";
-import { readJsonBody } from "../../../../server/lib/body";
+import { readJsonBody } from "@server/lib/body";
 
 type ChatBody = { messages?: unknown; jobData?: unknown };
 

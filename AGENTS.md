@@ -16,7 +16,7 @@ A Next.js App Router project. Code belongs to exactly one of these areas:
   stateful logic in `hooks/`. Reached by the `@/` alias.
 - `server/lib/` — server-only code the route handlers call: the URL scraping
   stack with its SSRF guard (`scrape.ts`) and the body reader (`body.ts`).
-  Never import it from a component.
+  Never import it from a component. Reached by the `@server/` alias.
 - `shared/` — the few modules both sides import (`schema.ts`, `url.ts`).
   Reached by the `@shared/` alias.
 

@@ -1,6 +1,6 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { JobPosting } from "@shared/schema";
 import { Button, QuickActionButton } from "@/components/ui/Button";
 import { ChatBubble, StreamingLine } from "@/components/ui/ChatBubble";
@@ -75,23 +75,17 @@ export function ApplicationChat({
 
     // Predefined one-tap refinements. The skill-specific one only appears when
     // the posting gave us a skill to name.
-    const quickActions = useMemo(() => {
-        const actions = [
-            { label: "Gjør mer formelt", text: "Gjør søknadsbrevet mer formelt." },
-            {
-                label: "Gjør kortere",
-                text: "Gjør søknadsbrevet kortere og mer konsist.",
-            },
-        ];
-        const skill = jobData.requiredSkills?.[0];
-        if (skill) {
-            actions.push({
-                label: `Fremhev ${skill}`,
-                text: `Revider brevet for å fremheve min erfaring med ${skill}.`,
-            });
-        }
-        return actions;
-    }, [jobData.requiredSkills]);
+    const quickActions = [
+        { label: "Gjør mer formelt", text: "Gjør søknadsbrevet mer formelt." },
+        { label: "Gjør kortere", text: "Gjør søknadsbrevet kortere og mer konsist." },
+    ];
+    const skill = jobData.requiredSkills?.[0];
+    if (skill) {
+        quickActions.push({
+            label: `Fremhev ${skill}`,
+            text: `Revider brevet for å fremheve min erfaring med ${skill}.`,
+        });
+    }
 
     // Hide the kickoff turn; show everything else.
     const visible = messages.filter(
