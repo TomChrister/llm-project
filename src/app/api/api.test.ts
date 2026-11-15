@@ -22,15 +22,16 @@ const USER_TURN = { id: "u1", role: "user", parts: [{ type: "text", text: "Hei" 
 
 // The routes are public and spend Anthropic credit, so the guards in front of
 // the model call matter. None of these requests may reach the model.
-function postChat(body: string) {
-    return chat(
-        new Request("http://localhost/api/chat", {
+function post(route: (request: Request) => Promise<Response>, body: string) {
+    return route(
+        new Request("http://localhost/api", {
             method: "POST",
             body,
             headers: { "content-type": "application/json" },
         }),
     );
 }
+const postChat = (body: string) => post(chat, body);
 
 describe("/api/chat", () => {
     it("rejects a body that is not JSON", async () => {
@@ -42,8 +43,7 @@ describe("/api/chat", () => {
     });
 
     it("rejects a request without the job it is about", async () => {
-        const messages = [{ role: "user", parts: [{ type: "text", text: "Hei" }] }];
-        expect((await postChat(JSON.stringify({ messages }))).status).toBe(400);
+        expect((await postChat(JSON.stringify({ messages: [USER_TURN] }))).status).toBe(400);
     });
 
     it("accepts the request the app itself sends", async () => {
@@ -102,13 +102,7 @@ describe("/api/chat", () => {
 
 describe("/api/extract", () => {
     it("rejects a value that is not a string", async () => {
-        const res = await extract(
-            new Request("http://localhost/api/extract", {
-                method: "POST",
-                body: JSON.stringify({ mode: "text", value: 123 }),
-                headers: { "content-type": "application/json" },
-            }),
-        );
+        const res = await post(extract, JSON.stringify({ mode: "text", value: 123 }));
         expect(res.status).toBe(400);
     });
 });
