@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fetchReadableText } from "./scrape.js";
+import { fetchReadableText } from "./scrape";
 
 // Smoke tests against real job boards, to catch Readability or Jina Reader
 // quietly no longer reading them. They need network access, so they are

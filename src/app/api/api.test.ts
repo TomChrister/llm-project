@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { app } from "./app.js";
+import { POST as chat } from "./chat/route";
+import { POST as extract } from "./extract/route";
 
 // Stand-in for the model call, so a request that passes every check answers
 // "ok" here instead of reaching Anthropic.
@@ -22,11 +23,13 @@ const USER_TURN = { id: "u1", role: "user", parts: [{ type: "text", text: "Hei" 
 // The routes are public and spend Anthropic credit, so the guards in front of
 // the model call matter. None of these requests may reach the model.
 function postChat(body: string) {
-    return app.request("/api/chat", {
-        method: "POST",
-        body,
-        headers: { "content-type": "application/json" },
-    });
+    return chat(
+        new Request("http://localhost/api/chat", {
+            method: "POST",
+            body,
+            headers: { "content-type": "application/json" },
+        }),
+    );
 }
 
 describe("/api/chat", () => {
@@ -99,11 +102,13 @@ describe("/api/chat", () => {
 
 describe("/api/extract", () => {
     it("rejects a value that is not a string", async () => {
-        const res = await app.request("/api/extract", {
-            method: "POST",
-            body: JSON.stringify({ mode: "text", value: 123 }),
-            headers: { "content-type": "application/json" },
-        });
+        const res = await extract(
+            new Request("http://localhost/api/extract", {
+                method: "POST",
+                body: JSON.stringify({ mode: "text", value: 123 }),
+                headers: { "content-type": "application/json" },
+            }),
+        );
         expect(res.status).toBe(400);
     });
 });

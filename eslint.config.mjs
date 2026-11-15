@@ -2,12 +2,11 @@ import js from "@eslint/js";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
     // .claude/worktrees holds Claude Code's spare copies of the repo.
-    globalIgnores(["dist/**", "node_modules/**", ".claude/**"]),
+    globalIgnores([".next/**", "next-env.d.ts", "node_modules/**", ".claude/**"]),
     {
         files: ["**/*.{ts,tsx}"],
         extends: [
@@ -16,18 +15,16 @@ export default defineConfig([
             // `configs["recommended-latest"]` is still the legacy eslintrc shape
             // in v7; the flat one lives under `configs.flat`.
             reactHooks.configs.flat["recommended-latest"],
-            reactRefresh.configs.vite,
         ],
         languageOptions: {
             ecmaVersion: 2022,
             globals: globals.browser,
         },
     },
-    // The backend and the Vercel function run in Node, not the browser,
-    // and ship no React components.
+    // The scraping stack, the route handlers and the config files run in
+    // Node, not the browser.
     {
-        files: ["server/**/*.ts", "api/**/*.ts", "vite.config.ts"],
+        files: ["server/**/*.ts", "src/app/api/**/*.ts", "*.config.ts"],
         languageOptions: { globals: globals.node },
-        rules: { "react-refresh/only-export-components": "off" },
     },
 ])

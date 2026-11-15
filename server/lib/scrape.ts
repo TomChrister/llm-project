@@ -15,7 +15,7 @@
 // jsdom's size, which matters for a serverless function that cold-starts.
 import { Readability } from "@mozilla/readability";
 import { parseHTML } from "linkedom";
-import { normalizeUrlInput } from "../../shared/url.js";
+import { normalizeUrlInput } from "../../shared/url";
 
 // Thrown for every expected failure so the route can map it to a friendly
 // message + HTTP status instead of a generic 500.

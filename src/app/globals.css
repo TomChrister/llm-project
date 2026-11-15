@@ -2,7 +2,7 @@
 
 /* Inter stands in for the reference design's NoiGrotesk (UI and body), and
    expanded heavy Archivo for its SansPlomb display face. Both are
-   self-hosted variable fonts imported in main.tsx. */
+   self-hosted variable fonts imported in app/layout.tsx. */
 @theme inline {
   --font-sans: "Inter Variable", ui-sans-serif, -apple-system, "Segoe UI",
     Arial, sans-serif;
@@ -81,6 +81,13 @@ body {
   letter-spacing: var(--tracking-tight);
   /* The hero glow bleeds past the column; clip it rather than scroll. */
   overflow-x: clip;
+}
+
+/* One focus ring for everything reachable by keyboard. The offset puts it
+   on the dark canvas, so it also shows around white inputs and lime buttons. */
+:focus-visible {
+  outline: 2px solid var(--cyan-spark);
+  outline-offset: 2px;
 }
 
 ::selection {

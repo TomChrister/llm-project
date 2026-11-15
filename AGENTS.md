@@ -1,22 +1,41 @@
 # Architecture
 
-Three top-level areas, and code belongs to exactly one of them:
+A Next.js App Router project. Code belongs to exactly one of these areas:
 
-- `src/` — the React client, built by Vite. Components live in domain folders
+- `src/app/` — the Next.js entry points. `layout.tsx` and `page.tsx` are Server
+  Components and only render the shell. `ClientApp.tsx` is the single
+  `"use client"` boundary; it loads `src/App.tsx` with `ssr: false`, because
+  the UI is built from the URL hash and `localStorage`, which the server never
+  sees. Don't add `"use client"` anywhere else — everything below that
+  boundary is already client code.
+- `src/app/api/` — the route handlers (`extract`, `chat`, `health`). They own
+  the Anthropic calls. Each one reads its body through
+  `server/lib/body.ts`, which enforces the request size cap.
+- `src/` otherwise — the React client. Components live in domain folders
   (`components/layout`, `components/job`, `components/chat`, `components/ui`),
   stateful logic in `hooks/`. Reached by the `@/` alias.
-- `server/` — the Hono API. Owns the Anthropic calls and the URL scraping
-  stack (`server/lib/`). Uses relative imports only, so it runs under plain
-  `tsx` with no path resolution. `app.ts` is the app itself; `index.ts` is
-  only the Node entrypoint.
-- `api/` — the Vercel function wrapping that same app. One line; put no
-  logic here.
+- `server/lib/` — server-only code the route handlers call: the URL scraping
+  stack with its SSRF guard (`scrape.ts`) and the body reader (`body.ts`).
+  Never import it from a component.
 - `shared/` — the few modules both sides import (`schema.ts`, `url.ts`).
   Reached by the `@shared/` alias.
 
 Anything holding `ANTHROPIC_API_KEY`, or fetching a third-party URL, belongs in
-`server/`. Putting it in `src/` ships the key to the browser and runs the fetch
-against CORS.
+a route handler or `server/lib/`. Never give a secret a `NEXT_PUBLIC_` prefix:
+that inlines it into the browser bundle.
 
-`npm run dev` starts both halves: Vite on 5173 and the API on 3001, with Vite
-proxying `/api` to it so the browser sees one origin.
+Navigation between the two views is the URL hash (`src/hooks/useView.ts`), not
+Next.js routes — there is one page, `/`.
+
+`npm run dev` starts Next.js on http://127.0.0.1:3000, bound to loopback on
+purpose: the API spends the Anthropic key and has no rate limit locally.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
