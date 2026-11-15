@@ -75,8 +75,7 @@ export function Sidebar({
                         </div>
                     )}
                     {jobs
-                        .slice()
-                        .reverse()
+                        .toReversed()
                         .map((job) => (
                             <div
                                 key={job.id}

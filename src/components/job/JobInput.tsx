@@ -68,7 +68,6 @@ export function JobInput({
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         placeholder="Lim inn hele stillingsannonsen her..."
-                        rows={10}
                     />
                     <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm text-[var(--text-tertiary)]">

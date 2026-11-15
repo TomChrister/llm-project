@@ -18,9 +18,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (
         <html lang="no">
-            <body>
-                <div id="root">{children}</div>
-            </body>
+            <body>{children}</body>
         </html>
     );
 }

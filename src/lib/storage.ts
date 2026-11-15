@@ -5,7 +5,7 @@
 // Exposed as a useSyncExternalStore-backed hook (not plain useState +
 // useEffect) so every consumer reads one shared snapshot and re-renders
 // together when localStorage changes, including from another tab.
-import { useCallback, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import type { UIMessage } from "ai";
 import type { JobPosting } from "@shared/schema";
 
@@ -29,7 +29,6 @@ let cachedRaw: string | null | undefined = undefined;
 const listeners = new Set<() => void>();
 
 function readStorage(): SavedJob[] {
-    if (typeof window === "undefined") return [];
     let raw: string | null;
     try {
         raw = window.localStorage.getItem(STORAGE_KEY);
@@ -62,28 +61,11 @@ function subscribe(callback: () => void): () => void {
     return () => listeners.delete(callback);
 }
 
-const EMPTY_JOBS: SavedJob[] = [];
-
-function getServerSnapshot(): SavedJob[] {
-    return EMPTY_JOBS;
+function setJobs(update: (prev: SavedJob[]) => SavedJob[]) {
+    writeStorage(update(readStorage()));
 }
 
-export function useSavedJobs(): [
-    SavedJob[],
-    (updater: SavedJob[] | ((prev: SavedJob[]) => SavedJob[])) => void,
-] {
-    const jobs = useSyncExternalStore(subscribe, readStorage, getServerSnapshot);
-
-    const setJobs = useCallback(
-        (updater: SavedJob[] | ((prev: SavedJob[]) => SavedJob[])) => {
-            const next =
-                typeof updater === "function"
-                    ? (updater as (prev: SavedJob[]) => SavedJob[])(readStorage())
-                    : updater;
-            writeStorage(next);
-        },
-        [],
-    );
-
-    return [jobs, setJobs];
+// No server snapshot: the app is loaded with ssr: false (app/ClientApp.tsx).
+export function useSavedJobs(): [SavedJob[], typeof setJobs] {
+    return [useSyncExternalStore(subscribe, readStorage), setJobs];
 }

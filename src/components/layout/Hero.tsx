@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Wordmark } from "@/components/ui/Wordmark";
 
 // Each blob is a soft cyan or lime ellipse. Centre and radii are a base value
 // plus a random spread, so the aurora settles into a different, irregular
@@ -41,7 +40,16 @@ export function Hero() {
                 style={{ backgroundImage: background }}
                 className="pointer-events-none absolute top-[-30%] right-[-45%] -z-10 h-[150%] w-[110%] opacity-75 blur-3xl"
             />
-            <Wordmark size="lg" />
+            {/* A container, so the one-word headline can scale to the
+                column's width instead of overflowing it on narrow screens. */}
+            <div className="w-full @container">
+                <p className="mb-6 text-sm font-medium tracking-[var(--tracking-wide)] text-[var(--text-primary)]">
+                    AI-DREVET
+                </p>
+                <h1 className="m-0 font-display text-[min(5.6cqw,56px)] leading-[0.85] font-extrabold tracking-[-0.02em] text-[var(--text-primary)] uppercase [font-stretch:125%]">
+                    Jobbsøknadsassistent
+                </h1>
+            </div>
             <p className="m-0 max-w-[600px] text-xl leading-snug text-[var(--text-primary)]">
                 Lim inn en stillingsannonse, eller en URL, og få rollen, ferdighetene og ansvarsområdene
                 hentet ut umiddelbart, pluss AI-hjelp

@@ -1,8 +1,8 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { streamObject } from "ai";
 import { jobPostingSchema, NOT_A_JOB_TITLE } from "@shared/schema";
-import { readJsonBody } from "../../../../server/lib/body";
-import { fetchReadableText, ScrapeError } from "../../../../server/lib/scrape";
+import { readJsonBody } from "@server/lib/body";
+import { fetchReadableText, ScrapeError } from "@server/lib/scrape";
 
 type ExtractBody = { mode?: "url" | "text"; value?: string };
 
