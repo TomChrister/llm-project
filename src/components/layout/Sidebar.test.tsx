@@ -20,6 +20,25 @@ function makeJob(id: string, title: string, company?: string): SavedJob {
 }
 
 describe("Sidebar", () => {
+    it("moves focus into the open drawer and closes it on Escape", async () => {
+        const user = userEvent.setup();
+        const onClose = vi.fn();
+        render(
+            <Sidebar
+                jobs={[]}
+                currentId={null}
+                onSelect={vi.fn()}
+                onDelete={vi.fn()}
+                open
+                onClose={onClose}
+            />,
+        );
+
+        expect(screen.getByRole("button", { name: "Lukk meny" })).toHaveFocus();
+        await user.keyboard("{Escape}");
+        expect(onClose).toHaveBeenCalledOnce();
+    });
+
     it("shows an empty state when there are no saved jobs", () => {
         render(
             <Sidebar
