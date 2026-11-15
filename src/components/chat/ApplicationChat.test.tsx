@@ -4,7 +4,7 @@ import {
     createUIMessageStreamResponse,
     type UIMessage,
 } from "ai";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { JobPosting } from "@shared/schema";
 import { ApplicationChat } from "./ApplicationChat";
 
@@ -65,10 +65,6 @@ function renderChat(initialMessages: UIMessage[] = []) {
 beforeEach(() => {
     // jsdom has no layout, so no scrollTo on elements.
     Element.prototype.scrollTo = vi.fn();
-});
-
-afterEach(() => {
-    vi.unstubAllGlobals();
 });
 
 describe("ApplicationChat", () => {

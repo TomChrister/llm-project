@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ScrapeError, fetchReadableText } from "./scrape";
 
 // Long enough to clear MIN_TEXT_CHARS (200).
@@ -36,12 +36,6 @@ function stubFetch(handler: (url: string) => Response) {
 
 const calledUrls = (spy: ReturnType<typeof stubFetch>) =>
     spy.mock.calls.map(([input]) => String(input));
-
-afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.unstubAllEnvs();
-    vi.restoreAllMocks();
-});
 
 describe("fetchReadableText", () => {
     describe("SSRF guard", () => {

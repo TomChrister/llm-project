@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { NOT_A_JOB_TITLE } from "@shared/schema";
 import { useJobExtraction } from "./useJobExtraction";
 
@@ -25,10 +25,6 @@ function setup() {
     const { result } = renderHook(() => useJobExtraction(onExtracted));
     return { onExtracted, result };
 }
-
-afterEach(() => {
-    vi.unstubAllGlobals();
-});
 
 describe("useJobExtraction", () => {
     it("hands a complete posting to onExtracted", async () => {

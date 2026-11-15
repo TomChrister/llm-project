@@ -30,15 +30,7 @@ describe("JobDetails", () => {
     });
 
     it("falls back to a placeholder title and omits empty sections while streaming", () => {
-        render(
-            <JobDetails
-                job={{
-                    requiredSkills: [],
-                    niceToHaveSkills: [],
-                    responsibilities: [],
-                }}
-            />,
-        );
+        render(<JobDetails job={{ requiredSkills: [], responsibilities: [] }} />);
 
         expect(screen.getByRole("heading", { name: "…" })).toBeInTheDocument();
         expect(screen.queryByText("Nødvendige ferdigheter")).not.toBeInTheDocument();
@@ -48,13 +40,7 @@ describe("JobDetails", () => {
     it("links back to the source URL, shortened, under the title and company", () => {
         render(
             <JobDetails
-                job={{
-                    title: "Software Engineer",
-                    company: "Pexip",
-                    requiredSkills: [],
-                    niceToHaveSkills: [],
-                    responsibilities: [],
-                }}
+                job={{ title: "Software Engineer", company: "Pexip" }}
                 sourceUrl="https://pexip.bamboohr.com/careers/635"
             />,
         );
@@ -70,32 +56,13 @@ describe("JobDetails", () => {
     });
 
     it("omits the source link for a posting that was pasted as text", () => {
-        render(
-            <JobDetails
-                job={{
-                    title: "Software Engineer",
-                    requiredSkills: [],
-                    niceToHaveSkills: [],
-                    responsibilities: [],
-                }}
-            />,
-        );
+        render(<JobDetails job={{ title: "Software Engineer" }} />);
 
         expect(screen.queryByRole("link")).not.toBeInTheDocument();
     });
 
     it("shows an unparseable source URL as-is", () => {
-        render(
-            <JobDetails
-                job={{
-                    title: "Software Engineer",
-                    requiredSkills: [],
-                    niceToHaveSkills: [],
-                    responsibilities: [],
-                }}
-                sourceUrl="ikke en url"
-            />,
-        );
+        render(<JobDetails job={{ title: "Software Engineer" }} sourceUrl="ikke en url" />);
 
         expect(screen.getByRole("link", { name: "ikke en url" })).toBeInTheDocument();
     });
@@ -106,7 +73,6 @@ describe("JobDetails", () => {
                 job={{
                     title: "Product Manager",
                     requiredSkills: ["SQL", undefined],
-                    niceToHaveSkills: [],
                     responsibilities: [undefined],
                 }}
             />,
